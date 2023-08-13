@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using TypeSharper.Model;
 using TypeSharper.Model.Attr;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
@@ -30,6 +31,11 @@ public static class NamedTypeSymbolExtensions
 
     public static TsType ToType(this INamedTypeSymbol namedTypeSymbol)
     {
+        if (namedTypeSymbol.Kind == SymbolKind.ErrorType)
+        {
+            throw new TsModelCreationSymbolErrorException(namedTypeSymbol);
+        }
+
         var name = namedTypeSymbol.ToId();
 
         if (namedTypeSymbol.SpecialType != SpecialType.None)
@@ -58,7 +64,9 @@ public static class NamedTypeSymbolExtensions
             {
                 TypeKind.Interface => TsType.EKind.Interface,
                 TypeKind.Class when !namedTypeSymbol.IsRecord => TsType.EKind.Class,
-                TypeKind.Class when namedTypeSymbol.IsRecord => TsType.EKind.Record,
+                TypeKind.Class when namedTypeSymbol.IsRecord => TsType.EKind.RecordClass,
+                TypeKind.Struct when !namedTypeSymbol.IsRecord => TsType.EKind.Struct,
+                TypeKind.Struct when namedTypeSymbol.IsRecord => TsType.EKind.RecordStruct,
                 _ => throw new ArgumentOutOfRangeException(nameof(namedTypeSymbol), namedTypeSymbol, null),
             };
 
@@ -72,17 +80,21 @@ public static class NamedTypeSymbolExtensions
             TsList.Create(
                 namedTypeSymbol
                     .InstanceConstructors
+                    .Where(ctorSymbol => !ctorSymbol.ShouldBeIgnored())
                     .Select(ctorSymbol => ctorSymbol.ToCtor())),
             TsList.Create(
                 namedTypeSymbol
                     .GetMembers()
                     .OfType<IPropertySymbol>()
+                    .Where(propertySymbol => !propertySymbol.ShouldBeIgnored())
                     .Select(propertySymbol => propertySymbol.ToProp())),
             TsList.Create(
                 namedTypeSymbol
                     .GetMembers()
                     .OfType<IMethodSymbol>()
-                    .Where(methodSymbol => methodSymbol.MethodKind == MethodKind.Ordinary)
+                    .Where(
+                        methodSymbol => methodSymbol.MethodKind == MethodKind.Ordinary
+                                        && !methodSymbol.ShouldBeIgnored())
                     .Select(methodSymbol => methodSymbol.ToMethod())),
             TsList.Create(
                 namedTypeSymbol

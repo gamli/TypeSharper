@@ -12,7 +12,7 @@ public class PickGenerator : MemberSelectionTypeGenerator
 
     protected override TsId AttributeId() => new("TypeSharperPickAttribute");
 
-    protected override TsModel Generate(
+    protected override TsModel DoGenerate(
         TsModel model,
         TsType fromType,
         TsDict<TsId, TsProp> fromTypePropertyLookup,

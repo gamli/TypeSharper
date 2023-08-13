@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 using Microsoft.CodeAnalysis.Text;
+using TypeSharper.Diagnostics;
 using TypeSharper.Generator;
 using TypeSharper.Model;
 using TypeSharper.Model.Attr;
@@ -29,9 +30,9 @@ public class TypeSharperGenerator : IIncrementalGenerator
             TsTargetTypes(context),
             (sourceProductionContext, t) =>
             {
-                var (model, targets) = t;
+                var (model, targets, firstErrorSymbol) = t;
 
-                if (!RunDiagnostics(model, targets, sourceProductionContext))
+                if (!RunDiagnostics(model, targets, firstErrorSymbol, sourceProductionContext))
                 {
                     return;
                 }
@@ -42,10 +43,34 @@ public class TypeSharperGenerator : IIncrementalGenerator
                     generatedModel =>
                     {
                         var diffModel = model.Diff(generatedModel);
-                        foreach (var newType in diffModel.Types.Where(
-                                     type => type.IsTopLevel() && type.TypeKind != TsType.EKind.Special))
+                        var syntaxTreesWithPaths =
+                            diffModel
+                                .Types
+                                .Where(type => type.IsTopLevel() && type.TypeKind != TsType.EKind.Special)
+                                .Select(
+                                    newType =>
+                                    {
+                                        var syntaxTree = CSharpSyntaxTree.ParseText(newType.Cs(diffModel));
+
+                                        var filePath =
+                                            newType
+                                                .Ref()
+                                                .Ns
+                                                .Match(
+                                                    qualified => qualified.Parts.Select(p => p.Value).JoinString("/"),
+                                                    () => "")
+                                                .AddRightIfNotEmpty("/");
+
+                                        return (tree: syntaxTree, filePath: $"{filePath}{newType.Id.Value}.g");
+                                    })
+                                .ToList();
+
+                        foreach (var treeWithPath in syntaxTreesWithPaths)
                         {
-                            AddGeneratedTypeSource(diffModel, newType, sourceProductionContext);
+                            var formattedGeneratedSrc =
+                                Formatter.Format(treeWithPath.tree.GetRoot(), new AdhocWorkspace()).ToFullString();
+
+                            sourceProductionContext.AddSource(treeWithPath.filePath, formattedGeneratedSrc);
                         }
                     });
             });
@@ -54,29 +79,6 @@ public class TypeSharperGenerator : IIncrementalGenerator
     #region Private
 
     private Dictionary<TsTypeRef, TypeGenerator> _typeGenerators = new();
-
-    private static void AddGeneratedTypeSource(
-        TsModel model,
-        TsType type,
-        SourceProductionContext sourceProductionContext)
-    {
-        var formattedGeneratedSrc =
-            Formatter
-                .Format(CSharpSyntaxTree.ParseText(type.Cs(model)).GetRoot(), new AdhocWorkspace())
-                .ToFullString();
-
-        var newTypeSourceDirectory =
-            type
-                .Ref()
-                .Ns
-                .Match(
-                    qualified => qualified.Parts.Select(p => p.Value).JoinString("/"),
-                    () => "");
-
-        sourceProductionContext.AddSource(
-            $"{newTypeSourceDirectory.AddRightIfNotEmpty("/")}{type.Id.Value}.g",
-            formattedGeneratedSrc);
-    }
 
     private static IEnumerable<INamedTypeSymbol> CollectDependentTypes(INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol
@@ -89,12 +91,23 @@ public class TypeSharperGenerator : IIncrementalGenerator
            .Concat(namedTypeSymbol.ContainingTypeHierarchy())
            .Select(depType => (INamedTypeSymbol)depType);
 
-    private static TsModel CreateModel(ImmutableArray<INamedTypeSymbol> typeSymbols)
-        => typeSymbols
-           .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
-           .Aggregate(
-               TsModel.New(),
-               (current, typeSymbol) => current.AddType(typeSymbol.ToType()));
+    private static (TsModel model, Maybe<INamedTypeSymbol> firstErrorSymbol) CreateModel(
+        ImmutableArray<INamedTypeSymbol> typeSymbols)
+    {
+        try
+        {
+            return (typeSymbols
+                    .Distinct<INamedTypeSymbol>(SymbolEqualityComparer.Default)
+                    .Aggregate(
+                        TsModel.New(),
+                        (current, typeSymbol) => current.AddType(typeSymbol.ToType())),
+                Maybe<INamedTypeSymbol>.NONE);
+        }
+        catch (TsModelCreationSymbolErrorException e)
+        {
+            return (new TsModel(new TsDict<TsTypeRef, TsType>()), Maybe<INamedTypeSymbol>.Some(e.Symbol));
+        }
+    }
 
     private static IEnumerable<TsType> OrderTypesTopologicallyByDependencies(TsModel model)
     {
@@ -116,11 +129,26 @@ public class TypeSharperGenerator : IIncrementalGenerator
     private static bool RunDiagnostics(
         TsModel model,
         TsList<(TsType targetType, TsAttr attr)> targets,
+        Maybe<INamedTypeSymbol> firstErrorSymbol,
         SourceProductionContext sourceProductionContext)
     {
+        if (!firstErrorSymbol.Match(
+                errorSymbol =>
+                {
+                    EDiagnosticsCode.ModelCreationFailedBecauseOfSymbolError.ReportError(
+                        sourceProductionContext,
+                        "The symbol {0} contains an error.",
+                        errorSymbol);
+                    return false;
+                },
+                () => true))
+        {
+            return false;
+        }
+
         foreach (var (targetType, _) in targets)
         {
-            if (!EDiagnosticsCode.TypeHierarchyMustBePartial.RunDiagnostics(sourceProductionContext, model, targetType))
+            if (!Diag.RunTypeHierarchyIsPartialDiagnostics(sourceProductionContext, model, targetType))
             {
                 return false;
             }
@@ -129,8 +157,10 @@ public class TypeSharperGenerator : IIncrementalGenerator
         return true;
     }
 
-    private static IncrementalValueProvider<(TsModel model, TsList<(TsType targetType, TsAttr attr)> targets)>
-        TsTargetTypes(IncrementalGeneratorInitializationContext context)
+    private static IncrementalValueProvider<(
+        TsModel model,
+        TsList<(TsType targetType, TsAttr attr)> targets,
+        Maybe<INamedTypeSymbol> firstErrorSymbol)> TsTargetTypes(IncrementalGeneratorInitializationContext context)
         => context
            .SyntaxProvider
            .CreateSyntaxProvider(
@@ -150,17 +180,18 @@ public class TypeSharperGenerator : IIncrementalGenerator
            .Select(
                (typeSymbols, _) =>
                {
-                   var model = CreateModel(typeSymbols);
+                   var t = CreateModel(typeSymbols);
                    return (
-                       model,
+                       t.model,
                        targets: TsList.Create(
-                           OrderTypesTopologicallyByDependencies(model)
+                           OrderTypesTopologicallyByDependencies(t.model)
                                .Where(type => type.Mods.TargetType.IsSet)
                                .SelectMany(
                                    targetType => targetType
                                                  .Attrs
                                                  .Where(attr => attr.IsTsAttr)
-                                                 .Select(attr => (targetType, attr)))));
+                                                 .Select(attr => (targetType, attr)))),
+                       t.firstErrorSymbol);
                });
 
     private void InitializeTypeGenerators(IncrementalGeneratorInitializationContext context)
@@ -199,7 +230,15 @@ public class TypeSharperGenerator : IIncrementalGenerator
                 return Maybe<TsModel>.NONE;
             }
 
-            generatedModel = typeGenerator.Generate(targetType, targetAttr, generatedModel);
+            try
+            {
+                generatedModel = typeGenerator.Generate(targetType, targetAttr, generatedModel);
+            }
+            catch (TsGeneratorException e)
+            {
+                e.Code.ReportError(sourceProductionContext, e.FmtMsg, e.FmtArgs);
+                return Maybe<TsModel>.NONE;
+            }
         }
 
         return Maybe<TsModel>.Some(generatedModel);

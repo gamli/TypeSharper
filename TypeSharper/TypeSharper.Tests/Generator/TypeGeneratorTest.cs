@@ -1,3 +1,4 @@
+using TypeSharper.Diagnostics;
 using Xunit;
 
 // ReSharper disable HeapView.ObjectAllocation
@@ -9,6 +10,7 @@ public class TypeGeneratorTests
     [Fact]
     public void All_types_in_a_nested_type_hierarchy_must_be_partial()
         => GeneratorTest.Fail(
+            EDiagnosticsCode.TypeHierarchyMustBePartial,
             // language=csharp
             """
             public interface IPickSource
@@ -24,6 +26,96 @@ public class TypeGeneratorTests
                     public partial interface INestedNestedPickTarget {}
                 }
             }
+            """);
+
+    [Fact]
+    public void Each_type_is_generated_into_its_own_file()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            public interface IPickSource
+            {
+                public string Name { get; set; }
+            }
+            [TypeSharperPickAttribute<IPickSource>("Name")]
+            public partial interface IFirstPickTarget {}
+            [TypeSharperPickAttribute<IPickSource>("Name")]
+            public partial interface ISecondPickTarget {}
+            """,
+            ("IFirstPickTarget.g.cs",
+                // language=csharp
+                """
+                public partial interface IFirstPickTarget
+                {
+                    public System.String Name { get; set; }
+                }
+                """),
+            ("ISecondPickTarget.g.cs",
+                // language=csharp
+                """
+                public partial interface ISecondPickTarget
+                {
+                    public System.String Name { get; set; }
+                }
+                """));
+
+    [Fact]
+    public void Target_type_can_be_class()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            public class PickSource
+            {
+                public string Name { get; set; }
+                public bool IsSample { get; set; }
+            }
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
+            public partial class PickTarget { }
+            """,
+            // language=csharp
+            """
+            public partial class PickTarget
+            {
+                public System.String Name { get; set; }
+                public System.Boolean IsSample { get; set; }
+            }
+            """);
+
+    [Fact]
+    public void Target_type_can_be_interface()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            public interface IPickSource
+            {
+                public string Name { get; set; }
+                public bool IsSample { get; set; }
+            }
+            [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>("Name", "IsSample")]
+            public partial interface IPickTarget { }
+            """,
+            // language=csharp
+            """
+            public partial interface IPickTarget
+            {
+                public System.String Name { get; set; }
+                public System.Boolean IsSample { get; set; }
+            }
+            """);
+
+    [Fact]
+    public void Target_type_record_is_NOT_SUPPORTED()
+        => GeneratorTest.Fail(
+            EDiagnosticsCode.TypeMustBeInterfaceOrClass,
+            // language=csharp
+            """
+            public record PickSource
+            {
+                public string Name { get; set; }
+            }
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
+            public partial record PickTarget { }
             """);
 
     [Fact]
@@ -56,6 +148,7 @@ public class TypeGeneratorTests
     [Fact]
     public void Targeting_a_non_partial_type_generates_an_error()
         => GeneratorTest.Fail(
+            EDiagnosticsCode.TypeHierarchyMustBePartial,
             // language=csharp
             """
             public class PickSource { }

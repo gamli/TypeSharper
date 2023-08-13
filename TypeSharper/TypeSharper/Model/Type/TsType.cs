@@ -121,10 +121,12 @@ public record TsType(
     private string CsKind()
         => TypeKind switch
         {
-            EKind.Interface => "interface",
-            EKind.Class     => "class",
-            EKind.Record    => "record",
-            _               => throw new ArgumentOutOfRangeException(nameof(TypeKind), TypeKind, null),
+            EKind.Interface   => "interface",
+            EKind.Class       => "class",
+            EKind.RecordClass => "record",
+            EKind.Struct       => "struct",
+            EKind.RecordStruct => "record struct",
+            _                 => throw new ArgumentOutOfRangeException(nameof(TypeKind), TypeKind, null),
         };
 
     private IEnumerable<string> CsMembersAndNestedTypes(TsModel model)
@@ -135,7 +137,7 @@ public record TsType(
     private IEnumerable<string> CsNestedTypes(TsModel model)
         => model.NestedTypes(this).Select(nestedType => nestedType.Cs(model));
 
-    private string CsNs() => Ns.Cs().AddRightIfNotEmpty("\n\n");
+    private string CsNs() => ContainingType.Match(_ => "", () => Ns.Cs().AddRightIfNotEmpty("\n\n"));
     private IEnumerable<string> CsProps() => Props.Select(prop => prop.Cs());
 
     private string CsSignature()
@@ -194,7 +196,9 @@ public record TsType(
     {
         Interface,
         Class,
-        Record,
+        RecordClass,
+        Struct,
+        RecordStruct,
         Special,
     }
 

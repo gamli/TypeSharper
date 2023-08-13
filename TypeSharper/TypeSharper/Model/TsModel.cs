@@ -14,11 +14,12 @@ public record TsModel(TsDict<TsTypeRef, TsType> TypeLookup)
     {
         var typeRef = type.Ref();
         return TypeLookup.TryGetValue(typeRef, out var existingType)
-            ? new TsModel(
-                TypeLookup.Set(
-                    typeRef,
-                    existingType.AddMembers(type.Ctors, type.Props, type.Methods, type.Attrs)))
-            : new TsModel(TypeLookup.Add(typeRef, type));
+            ? this with
+            {
+                TypeLookup =
+                TypeLookup.Set(typeRef, existingType.AddMembers(type.Ctors, type.Props, type.Methods, type.Attrs)),
+            }
+            : this with { TypeLookup = TypeLookup.Add(typeRef, type) };
     }
 
     public TsModel Diff(TsModel otherModel)

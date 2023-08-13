@@ -1,3 +1,4 @@
+using TypeSharper.Diagnostics;
 using Xunit;
 
 // ReSharper disable HeapView.ObjectAllocation
@@ -7,7 +8,7 @@ namespace TypeSharper.Tests.Generator;
 public class UnionGeneratorTests
 {
     [Fact]
-    public void Union_cases_do_not_have_to_have_a_value()
+    public void Union_cases_are_not_required_to_have_a_value()
         => GeneratorTest.ExpectOutput(
             // language=csharp
             """
@@ -125,6 +126,7 @@ public class UnionGeneratorTests
     [Fact]
     public void Union_target_type_must_be_abstract()
         => GeneratorTest.Fail(
+            EDiagnosticsCode.TypeMustBeAbstract,
             // language=csharp
             """
             using TypeSharper.Attributes;
@@ -133,7 +135,7 @@ public class UnionGeneratorTests
             """);
 
     [Fact]
-    public void Unions_of_classes_interfaces_and_primitives_are_supported()
+    public void Union_case_values_can_be_of_any_kind()
         => GeneratorTest.ExpectOutput(
             // language=csharp
             """
@@ -141,27 +143,40 @@ public class UnionGeneratorTests
 
             public interface ICaseInterface {}
             public class CaseClass {}
+            public record CaseRecord;
+            public struct CaseStruct;
 
-            [TypeSharperUnion<ICaseInterface, CaseClass, string>("IFC", "CLS", "PRIM")]
-            public abstract partial class OneOfStringIntObject { }
+            [TypeSharperUnion<ICaseInterface, CaseClass, CaseRecord, CaseStruct, string>("IFC", "CLS", "REC", "SCT", "PRIM")]
+            public abstract partial class UnionTarget { }
             """,
             // language=csharp
             """
-            public abstract partial class OneOfStringIntObject
+            public abstract partial class UnionTarget
             {
-                private OneOfStringIntObject()
+                private UnionTarget()
                 { }
             
-                public static OneOfStringIntObject CreateIFC(ICaseInterface value)
+                public static UnionTarget CreateIFC(ICaseInterface value)
                     => new IFC(value);
             
-                public static OneOfStringIntObject CreateCLS(CaseClass value)
+                public static UnionTarget CreateCLS(CaseClass value)
                     => new CLS(value);
             
-                public static OneOfStringIntObject CreatePRIM(System.String value)
+                public static UnionTarget CreateREC(CaseRecord value)
+                    => new REC(value);
+            
+                public static UnionTarget CreateSCT(CaseStruct value)
+                    => new SCT(value);
+            
+                public static UnionTarget CreatePRIM(System.String value)
                     => new PRIM(value);
             
-                public void Match(System.Action<ICaseInterface> handleIFC, System.Action<CaseClass> handleCLS, System.Action<System.String> handlePRIM)
+                public void Match(
+                    System.Action<ICaseInterface> handleIFC,
+                    System.Action<CaseClass> handleCLS,
+                    System.Action<CaseRecord> handleREC,
+                    System.Action<CaseStruct> handleSCT,
+                    System.Action<System.String> handlePRIM)
                 {
                     switch (this)
                     {
@@ -171,13 +186,19 @@ public class UnionGeneratorTests
                         case CLS c:
                             handleCLS(c.Value);
                             break;
+                        case REC c:
+                            handleREC(c.Value);
+                            break;
+                        case SCT c:
+                            handleSCT(c.Value);
+                            break;
                         case PRIM c:
                             handlePRIM(c.Value);
                             break;
                     }
                 }
                 
-                private sealed class CLS : OneOfStringIntObject
+                private sealed class CLS : UnionTarget
                 {
                     public CLS(CaseClass value)
                         => Value = value;
@@ -185,7 +206,7 @@ public class UnionGeneratorTests
                     public CaseClass Value { get; }
                 }
                 
-                private sealed class IFC : OneOfStringIntObject
+                private sealed class IFC : UnionTarget
                 {
                     public IFC(ICaseInterface value)
                         => Value = value;
@@ -193,12 +214,28 @@ public class UnionGeneratorTests
                     public ICaseInterface Value { get; }
                 }
             
-                private sealed class PRIM : OneOfStringIntObject
+                private sealed class PRIM : UnionTarget
                 {
                     public PRIM(System.String value)
                         => Value = value;
             
                     public System.String Value { get; }
+                }
+                
+                private sealed class REC : UnionTarget
+                {
+                    public REC(CaseRecord value)
+                        => Value = value;
+                    
+                    public CaseRecord Value { get; }
+                }
+                
+                private sealed class SCT : UnionTarget
+                {
+                    public SCT(CaseStruct value)
+                        => Value = value;
+            
+                    public CaseStruct Value { get; }
                 }
             }
             """);

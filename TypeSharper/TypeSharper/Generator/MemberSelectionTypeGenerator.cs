@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using TypeSharper.Diagnostics;
 using TypeSharper.Model;
 using TypeSharper.Model.Attr;
 using TypeSharper.Model.Attr.Def;
@@ -30,45 +31,66 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
                     TsList<TsParam>.Empty,
                     TsList.Create(new TsId("TFromType")))));
 
-    public override TsModel Generate(TsType targetType, TsAttr attr, TsModel model)
-        => Generate(
-            model,
-            model.Resolve(attr.TypeArgs.First()),
-            model.Resolve(attr.TypeArgs.Single()).Props.ToDictionary(prop => prop.Id),
-            TsList.Create(
-                attr
-                    .CtorArgs
-                    .SelectMany(
-                        attrValue =>
-                            attrValue
-                                .Match(
-                                    primitive => new[] { primitive },
-                                    array => (IEnumerable<string>)array)
-                                .Select(propertyName => new TsId(propertyName)))),
-            targetType,
-            attr);
-
     public override bool RunDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsModel model,
         TsType targetType,
         TsAttr attr)
-        => EDiagnosticsCode.TypeMustBeInterfaceOrClass.RunDiagnostics(
-            sourceProductionContext,
-            model,
-            model.Resolve(attr.TypeArgs.Single()));
+    {
+        var fromType = FromType(attr, model);
+        return Diag.RunPropertyDoesNotExistDiagnostics(sourceProductionContext, fromType, SelectedPropertyNames(attr))
+               && Diag.RunTypeIsInterfaceOrClassOrStructDiagnostics(sourceProductionContext, fromType);
+    }
 
     #region Protected
 
     protected abstract TsId AttributeId();
 
-    protected abstract TsModel Generate(
+    protected abstract TsModel DoGenerate(
         TsModel model,
         TsType fromType,
         TsDict<TsId, TsProp> fromTypePropertyLookup,
         TsList<TsId> selectedPropertyNames,
         TsType targetType,
         TsAttr attr);
+
+    protected override TsModel DoGenerate(TsType targetType, TsAttr attr, TsModel model)
+    {
+        var fromType = FromType(attr, model);
+
+        var fromTypePropertyLookup = FromTypePropertyLookup(fromType);
+
+        var selectedPropertyNames = SelectedPropertyNames(attr);
+
+        return DoGenerate(
+            model,
+            fromType,
+            fromTypePropertyLookup,
+            selectedPropertyNames,
+            targetType,
+            attr);
+    }
+
+    #endregion
+
+    #region Private
+
+    private static TsType FromType(TsAttr attr, TsModel model) => model.Resolve(attr.TypeArgs.Single());
+
+    private static TsDict<TsId, TsProp> FromTypePropertyLookup(TsType fromType)
+        => fromType.Props.ToDictionary(prop => prop.Id);
+
+    private static TsList<TsId> SelectedPropertyNames(TsAttr attr)
+        => TsList.Create(
+            attr
+                .CtorArgs
+                .SelectMany(
+                    attrValue =>
+                        attrValue
+                            .Match(
+                                primitive => new[] { primitive },
+                                array => (IEnumerable<string>)array)
+                            .Select(propertyName => new TsId(propertyName))));
 
     #endregion
 }

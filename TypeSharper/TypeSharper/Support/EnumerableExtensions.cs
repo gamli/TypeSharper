@@ -23,13 +23,29 @@ public static class EnumerableExtensions
     public static IEnumerable<T> Flatten<T>(this IEnumerable<IEnumerable<T>> enumerable)
         => enumerable.SelectMany(x => x);
 
-    public static IEnumerable<T> RepeatIndefinitely<T>(T value)
+    public static IEnumerable<T> Generate<T>(int count, Func<int, T> generateNextValue)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            yield return generateNextValue(i);
+        }
+    }
+
+    public static IEnumerable<T> Repeat<T>(this T value)
     {
         while (true)
         {
             yield return value;
         }
         // ReSharper disable once IteratorNeverReturns
+    }
+
+    public static IEnumerable<T> Repeat<T>(this T value, int count)
+    {
+        for (var i = 0; i < count; i++)
+        {
+            yield return value;
+        }
     }
 
     public static IEnumerable<T> SkipLast<T>(this IEnumerable<T> enumerable)

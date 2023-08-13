@@ -1,33 +1,16 @@
-using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using TypeSharper.Model;
+using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Type;
+using TypeSharper.Support;
 
-namespace TypeSharper;
+namespace TypeSharper.Diagnostics;
 
-public enum EDiagnosticsCode { TypeHierarchyMustBePartial, TypeMustBeInterfaceOrClass, TypeMustBeAbstract }
-
-public static class DiagnosticCodeExtensions
+public static class Diag
 {
-    public static bool RunDiagnostics(
-        this EDiagnosticsCode diagnosticsCode,
-        SourceProductionContext sourceProductionContext,
-        TsModel model,
-        TsType type)
-        => diagnosticsCode switch
-        {
-            EDiagnosticsCode.TypeHierarchyMustBePartial
-                => RunTypeHierarchyIsPartialDiagnostics(sourceProductionContext, model, type),
-            EDiagnosticsCode.TypeMustBeInterfaceOrClass
-                => RunTypeIsInterfaceOrClassDiagnostics(sourceProductionContext, type),
-            EDiagnosticsCode.TypeMustBeAbstract
-                => RunTypeIsAbstractDiagnostics(sourceProductionContext, type),
-            _ => throw new ArgumentOutOfRangeException(nameof(diagnosticsCode), diagnosticsCode, null),
-        };
-
-    #region Private
-
-    private static void ReportError(
+    public static void ReportError(
         this EDiagnosticsCode diagnosticsCode,
         SourceProductionContext context,
         string messageFormat,
@@ -36,7 +19,7 @@ public static class DiagnosticCodeExtensions
         diagnosticsCode.ReportError(context, messageFormat, null, messageArgs);
     }
 
-    private static void ReportError(
+    public static void ReportError(
         this EDiagnosticsCode diagnosticsCode,
         SourceProductionContext context,
         string messageFormat,
@@ -55,7 +38,30 @@ public static class DiagnosticCodeExtensions
         context.ReportDiagnostic(Diagnostic.Create(diagnosticDescriptor, location, messageArgs));
     }
 
-    private static bool RunTypeHierarchyIsPartialDiagnostics(
+    public static bool RunPropertyDoesNotExistDiagnostics(
+        SourceProductionContext sourceProductionContext,
+        TsType type,
+        IEnumerable<TsId> propertyNames)
+    {
+        var typePropLookup = type.Props.ToDictionary(prop => prop.Id);
+        var nonExistingPropertyNames =
+            propertyNames.Where(propName => !typePropLookup.ContainsKey(propName)).ToList();
+
+        if (nonExistingPropertyNames.Count == 0)
+        {
+            return true;
+        }
+
+        EDiagnosticsCode.PropertyDoesNotExist.ReportError(
+            sourceProductionContext,
+            "The following properties do not exist on type {0}: ({1})",
+            type.Ref().Cs(),
+            nonExistingPropertyNames.Select(id => id.Cs()).JoinList());
+
+        return false;
+    }
+
+    public static bool RunTypeHierarchyIsPartialDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsModel model,
         TsType type)
@@ -74,12 +80,12 @@ public static class DiagnosticCodeExtensions
         EDiagnosticsCode.TypeHierarchyMustBePartial.ReportError(
             sourceProductionContext,
             "The type {0} must be partial.",
-            type);
+            type.Ref().Cs());
 
         return false;
     }
 
-    private static bool RunTypeIsAbstractDiagnostics(
+    public static bool RunTypeIsAbstractDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsType type)
     {
@@ -88,30 +94,28 @@ public static class DiagnosticCodeExtensions
             return true;
         }
 
-        EDiagnosticsCode.TypeHierarchyMustBePartial.ReportError(
+        EDiagnosticsCode.TypeMustBeAbstract.ReportError(
             sourceProductionContext,
-            "The type {type} must be abstract.",
+            "The type {0} must be abstract.",
             type);
 
         return false;
     }
 
-    private static bool RunTypeIsInterfaceOrClassDiagnostics(
+    public static bool RunTypeIsInterfaceOrClassOrStructDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsType type)
     {
-        if (type.TypeKind is TsType.EKind.Interface or TsType.EKind.Class)
+        if (type.TypeKind is TsType.EKind.Interface or TsType.EKind.Class or TsType.EKind.Struct)
         {
             return true;
         }
 
         EDiagnosticsCode.TypeMustBeInterfaceOrClass.ReportError(
             sourceProductionContext,
-            "The type {type} must be a an interface or a class (not a record).",
-            type);
+            "The type {0} must be a an interface or a class (not a record).",
+            type.Ref().Cs());
 
         return false;
     }
-
-    #endregion
 }

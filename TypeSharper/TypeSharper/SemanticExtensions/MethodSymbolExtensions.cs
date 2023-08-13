@@ -12,7 +12,7 @@ public static class MethodSymbolExtensions
     public static Maybe<string> CsBody(this IMethodSymbol methodSymbol)
     {
         var csBody =
-            ((MethodDeclarationSyntax?)methodSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax())
+            (methodSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as MethodDeclarationSyntax)
             ?.Body
             ?.GetText()
             .ToString();

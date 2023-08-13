@@ -5,11 +5,14 @@ using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
+using TypeSharper.Diagnostics;
 
 namespace TypeSharper.Tests.Generator;
 
 public static class GeneratorTest
 {
+    public static GeneratorDriverRunResult ExpectEmptyOutput(string input) => ExpectOutput(input);
+
     public static GeneratorDriverRunResult ExpectOutput(string input, string expectedOutput)
         => ExpectOutput(input, (".g.cs", expectedOutput));
 
@@ -19,53 +22,61 @@ public static class GeneratorTest
     {
         var result = Succeed(input);
 
-        var generatedFiles = result.GeneratedTrees;
+        var userGeneratedFiles =
+            result.GeneratedTrees.Where(tree => !tree.FilePath.EndsWith("Attribute.g.cs")).ToList();
 
-        expectedFiles
-            .Should()
-            .AllSatisfy(
-                t =>
-                {
-                    var (expectedFileName, expectedCode) = t;
+        userGeneratedFiles.Should().HaveSameCount(expectedFiles);
 
-                    generatedFiles
-                        .Select(tree => tree.FilePath)
-                        .Should()
-                        .Contain(
-                            path => path.EndsWith(expectedFileName)
-                                    && !path.EndsWith("Attribute.g.cs"));
+        if (expectedFiles.Any())
+        {
+            expectedFiles
+                .Should()
+                .AllSatisfy(
+                    t =>
+                    {
+                        var (expectedFileName, expectedCode) = t;
 
-                    var generatedSrc =
-                        generatedFiles
-                            .Single(
-                                tree => tree.FilePath.EndsWith(expectedFileName)
-                                        && !tree.FilePath.EndsWith("Attribute.g.cs"))
-                            .GetText()
-                            .ToString()
-                            .ReplaceLineEndings("\n");
+                        userGeneratedFiles
+                            .Select(tree => tree.FilePath)
+                            .Should()
+                            .Contain(path => path.EndsWith(expectedFileName));
 
-                    var expectedSrc =
-                        Formatter
-                            .Format(
-                                CSharpSyntaxTree.ParseText(expectedCode).GetRoot(),
-                                new AdhocWorkspace())
-                            .ToFullString()
-                            .ReplaceLineEndings("\n");
+                        var generatedSrc =
+                            userGeneratedFiles
+                                .Single(tree => tree.FilePath.EndsWith(expectedFileName))
+                                .GetText()
+                                .ToString()
+                                .ReplaceLineEndings("\n");
 
-                    StringDiff.Print(generatedSrc, expectedSrc);
+                        var expectedSrc =
+                            Formatter
+                                .Format(
+                                    CSharpSyntaxTree.ParseText(expectedCode).GetRoot(),
+                                    new AdhocWorkspace())
+                                .ToFullString()
+                                .ReplaceLineEndings("\n");
 
-                    generatedSrc.Should().Contain(expectedSrc);
-                });
+                        StringDiff.Print(generatedSrc, expectedSrc);
+
+                        generatedSrc.Should().Contain(expectedSrc);
+                    });
+        }
 
         return result;
     }
 
-    public static GeneratorDriverRunResult Fail(IEnumerable<string> sources) => Fail(sources.ToArray());
+    public static GeneratorDriverRunResult Fail(EDiagnosticsCode code, IEnumerable<string> sources)
+        => Fail(code, sources.ToArray());
 
-    public static GeneratorDriverRunResult Fail(params string[] sources)
+    public static GeneratorDriverRunResult Fail(EDiagnosticsCode code, params string[] sources)
     {
         var result = Run(sources);
-        result.Diagnostics.Should().Contain(d => d.Severity == DiagnosticSeverity.Error);
+        result
+            .Diagnostics
+            .Should()
+            .Contain(
+                d => d.Severity == DiagnosticSeverity.Error
+                     && d.Descriptor.Title.ToString() == $"{code:G}");
         return result;
     }
 

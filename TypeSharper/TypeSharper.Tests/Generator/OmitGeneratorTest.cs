@@ -1,3 +1,4 @@
+using TypeSharper.Diagnostics;
 using Xunit;
 
 // ReSharper disable HeapView.ObjectAllocation
@@ -30,27 +31,6 @@ public class OmitGeneratorTests
             """);
 
     [Fact]
-    public void Omit_from_interface()
-        => GeneratorTest.ExpectOutput(
-            // language=csharp
-            """
-            public interface IOmitSource
-            {
-                public string Name { get; set; }
-                public bool IsSample { get; set; }
-            }
-            [TypeSharper.Attributes.TypeSharperOmitAttribute<IOmitSource>(nameof(OmitSource.IsSample))]
-            public partial interface IOmitTarget { }
-            """,
-            // language=csharp
-            """
-            public partial interface IOmitTarget
-            {
-                public System.String Name { get; set; }
-            }
-            """);
-
-    [Fact]
     public void Omit_multiple_properties()
         => GeneratorTest.ExpectOutput(
             // language=csharp
@@ -70,5 +50,34 @@ public class OmitGeneratorTests
             {
                 public System.String Name { get; set; }
             }
+            """);
+    
+    [Fact]
+    public void Omitting_all_properties_generates_no_code()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            public class OmitSource
+            {
+                public string Name { get; set; }
+                public bool IsSample { get; set; }
+                public int Count { get; set; }
+            }
+            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Name", "IsSample", "Count")]
+            public partial class PickTarget { }
+            """);
+
+    [Fact]
+    public void Omitting_non_existing_properties_is_an_error()
+        => GeneratorTest.Fail(
+            EDiagnosticsCode.PropertyDoesNotExist,
+            // language=csharp
+            """
+            public class OmitSource
+            {
+                public string Name { get; set; }
+            }
+            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Abc", "Xyz")]
+            public partial class OmitTarget { }
             """);
 }

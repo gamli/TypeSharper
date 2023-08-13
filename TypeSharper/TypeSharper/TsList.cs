@@ -13,17 +13,8 @@ public static class TsList
     public static TsList<T> Create<T>() => new();
 }
 
-public record TsList<T> : IEnumerable<T> where T : notnull
+public record TsList<T> : IEnumerable<T>
 {
-    // public TsList<T> Diff(TsList<T> otherList, Func<T, T, T> diff)
-    // {
-    //     var dict = ToDictionary(item => item);
-    //     return otherList.Select(
-    //         otherItem => dict.ContainsKey(otherItem)
-    //             ? diff(dict[otherItem], otherItem)
-    //             : otherItem);
-    // }
-
     public TsList(IEnumerable<T> enumerable) => _list = ImmutableList.CreateRange(enumerable);
     public TsList() => _list = ImmutableList.Create<T>();
     public TsList(params T[] elements) : this((IEnumerable<T>)elements) { }

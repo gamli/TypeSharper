@@ -13,7 +13,7 @@ public class OmitGenerator : MemberSelectionTypeGenerator
 
     protected override TsId AttributeId() => new("TypeSharperOmitAttribute");
 
-    protected override TsModel Generate(
+    protected override TsModel DoGenerate(
         TsModel model,
         TsType fromType,
         TsDict<TsId, TsProp> fromTypePropertyLookup,

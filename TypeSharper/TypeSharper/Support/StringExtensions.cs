@@ -50,15 +50,16 @@ public static class StringExtensions
         => string.Join(separator, values);
 
     public static string JoinTokens(this IEnumerable<string> tokens)
-        => tokens.Where(token => !string.IsNullOrWhiteSpace(token)).JoinString(" ");
+        => tokens.WhereNotNullOrWhitespace().JoinString(" ");
 
     public static string[] Lines(this string? str)
         => string.IsNullOrEmpty(str) ? Array.Empty<string>() : str!.Split('\n');
 
     public static string MarginRight(this string? str) => AddRightIfNotEmpty(str);
-    //
-    // public static string NewLine(this string? str, int count = 1) => AddRightIfNotEmpty(str, new string('\n', count));
-    //
-    // public static string NewLineIfMultiLine(this string? str, int count = 1)
-    //     => (str ?? "") + (str.Lines().Length > 1 ? new string('\n', count) : "");
+
+    public static string RepeatString(this string? str, int count)
+        => string.IsNullOrEmpty(str) ? "" : str!.Repeat(count).JoinString("");
+
+    public static IEnumerable<string> WhereNotNullOrWhitespace(this IEnumerable<string> tokens)
+        => tokens.Where(token => !string.IsNullOrWhiteSpace(token));
 }

@@ -30,7 +30,9 @@ public class IntersectionGenerator : TypeGenerator
                                         .Range(0, parameterCount)
                                         .Select(parameterIdx => new TsId($"TType_{parameterIdx}")))))));
 
-    public override TsModel Generate(TsType targetType, TsAttr attr, TsModel model)
+    #region Protected
+
+    protected override TsModel DoGenerate(TsType targetType, TsAttr attr, TsModel model)
     {
         var intersectedTypeCount = attr.TypeArgs.Count;
 
@@ -64,4 +66,6 @@ public class IntersectionGenerator : TypeGenerator
 
         return model.AddType(targetType.NewPartial().AddProps(propsPresentInAllTypes));
     }
+
+    #endregion
 }

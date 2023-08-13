@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
+using TypeSharper.Diagnostics;
 using TypeSharper.Model;
 using TypeSharper.Model.Attr;
 using TypeSharper.Model.Attr.Def;
@@ -49,7 +50,16 @@ public class UnionGenerator : TypeGenerator
                                         .Range(0, parameterCount)
                                         .Select(parameterIdx => new TsId($"TCaseType_{parameterIdx}")))))));
 
-    public override TsModel Generate(TsType targetType, TsAttr attr, TsModel model)
+    public override bool RunDiagnostics(
+        SourceProductionContext sourceProductionContext,
+        TsModel model,
+        TsType targetType,
+        TsAttr attr)
+        => Diag.RunTypeIsAbstractDiagnostics(sourceProductionContext, targetType);
+
+    #region Protected
+
+    protected override TsModel DoGenerate(TsType targetType, TsAttr attr, TsModel model)
     {
         var caseInfos = CaseInfos(targetType, attr);
 
@@ -75,15 +85,7 @@ public class UnionGenerator : TypeGenerator
                .Aggregate(model, (generatedModel, type) => generatedModel.AddType(type));
     }
 
-    public override bool RunDiagnostics(
-        SourceProductionContext sourceProductionContext,
-        TsModel model,
-        TsType targetType,
-        TsAttr attr)
-        => EDiagnosticsCode.TypeMustBeAbstract.RunDiagnostics(
-            sourceProductionContext,
-            model,
-            targetType);
+    #endregion
 
     #region Private
 
@@ -96,7 +98,7 @@ public class UnionGenerator : TypeGenerator
                     attr
                         .TypeArgs
                         .Select(Maybe<TsTypeRef>.Some)
-                        .Concat(EnumerableExtensions.RepeatIndefinitely(Maybe<TsTypeRef>.NONE)),
+                        .Concat(Maybe<TsTypeRef>.NONE.Repeat()),
                     (caseName, caseType) =>
                         new CaseInfo(
                             new TsId(caseName.AssertPrimitive()),

@@ -9,6 +9,9 @@ public static class SymbolExtensions
 {
     public static bool HasTsAttribute(this ISymbol symbol) => symbol.TsAttributes().Any();
 
+    public static bool ShouldBeIgnored(this ISymbol symbol)
+        => symbol.DeclaredAccessibility is Accessibility.Private or Accessibility.Protected;
+
     public static TsId ToId(this ISymbol symbol) => new(symbol.Name);
 
     public static TsQualifiedId ToQualifiedId(this ISymbol symbol)
