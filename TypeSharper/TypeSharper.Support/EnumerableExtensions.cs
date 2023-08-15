@@ -6,6 +6,47 @@ namespace TypeSharper.Support;
 
 public static class EnumerableExtensions
 {
+    public static IEnumerable<T> ContextWhere<T>(
+        this IEnumerable<T> enumerable,
+        int contextSize,
+        Func<T, bool> filterPredicate)
+    {
+        var prefixContextQueue = new Queue<T>();
+        var suffixContentCount = 0;
+
+        using var enumerator = enumerable.GetEnumerator();
+        while (enumerator.MoveNext())
+        {
+            if (filterPredicate(enumerator.Current))
+            {
+                foreach (var contextItem in prefixContextQueue)
+                {
+                    yield return contextItem;
+                }
+
+                prefixContextQueue.Clear();
+                yield return enumerator.Current;
+                suffixContentCount = contextSize;
+            }
+            else
+            {
+                if (suffixContentCount != 0)
+                {
+                    yield return enumerator.Current;
+                    suffixContentCount--;
+                }
+                else
+                {
+                    prefixContextQueue.Enqueue(enumerator.Current);
+                    if (prefixContextQueue.Count > contextSize)
+                    {
+                        prefixContextQueue.Dequeue();
+                    }
+                }
+            }
+        }
+    }
+
     public static IEnumerable<TSource> DistinctBy<TSource, TKey>(
         this IEnumerable<TSource> source,
         Func<TSource, TKey> keySelector)

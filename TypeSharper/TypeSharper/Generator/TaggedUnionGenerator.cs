@@ -13,11 +13,11 @@ using TypeSharper.Support;
 
 namespace TypeSharper.Generator;
 
-public class UnionGenerator : TypeGenerator
+public class TaggedUnionGenerator : TypeGenerator
 {
     public override TsAttrDef AttributeDefinition(IncrementalGeneratorInitializationContext context)
         => new(
-            new TsId("TypeSharperUnionAttribute"),
+            new TsId("TypeSharperTaggedUnionAttribute"),
             AttributeTargets.Interface | AttributeTargets.Class,
             TsList.Create(
                 Enumerable
@@ -67,7 +67,7 @@ public class UnionGenerator : TypeGenerator
             new TsCtor(
                 TsList.Create<TsParam>(),
                 new TsMemberMods(ETsVisibility.Private, new TsAbstractMod(false), new TsStaticMod(false)),
-                Maybe<string>.Some("{ }"));
+                Maybe.Some("{ }"));
 
         var factoryMethods = caseInfos.Select(FactoryMethod);
 
@@ -97,8 +97,8 @@ public class UnionGenerator : TypeGenerator
                 .Zip(
                     attr
                         .TypeArgs
-                        .Select(Maybe<TsTypeRef>.Some)
-                        .Concat(Maybe<TsTypeRef>.NONE.Repeat()),
+                        .Select(Maybe.Some)
+                        .Concat(Maybe.None<TsTypeRef>().Repeat()),
                     (caseName, caseType) =>
                         new CaseInfo(
                             new TsId(caseName.AssertPrimitive()),
@@ -111,7 +111,7 @@ public class UnionGenerator : TypeGenerator
                         .AssertArray()
                         .Select(
                             caseWithoutValueName =>
-                                new CaseInfo(new TsId(caseWithoutValueName), Maybe<TsTypeRef>.NONE, targetType))));
+                                new CaseInfo(new TsId(caseWithoutValueName), Maybe.None<TsTypeRef>(), targetType))));
 
     private static TsType CaseType(CaseInfo caseInfo)
     {
@@ -126,8 +126,8 @@ public class UnionGenerator : TypeGenerator
         var caseType =
             new TsType(
                 caseInfo.CaseName,
-                Maybe<TsTypeRef>.Some(caseInfo.TargetType.Ref()),
-                Maybe<TsTypeRef>.Some(caseInfo.TargetType.Ref()),
+                Maybe.Some(caseInfo.TargetType.Ref()),
+                Maybe.Some(caseInfo.TargetType.Ref()),
                 caseInfo.TargetType.Ns,
                 caseInfo.TargetType.TypeKind,
                 caseTypeMods);
@@ -144,7 +144,7 @@ public class UnionGenerator : TypeGenerator
                                     ETsVisibility.Public,
                                     new TsAbstractMod(false),
                                     new TsStaticMod(false)),
-                                Maybe<string>.Some("    => Value = value;")))
+                                Maybe.Some("    => Value = value;")))
                         .AddProp(
                             new TsProp(
                                 innerCaseType,
@@ -172,13 +172,13 @@ public class UnionGenerator : TypeGenerator
                     returnType,
                     TsList.Create(new TsParam(caseType, new TsId("value"), false)),
                     mods,
-                    Maybe<string>.Some($"    => new {caseInfo.CaseName.Cs()}(value);")),
+                    Maybe.Some($"    => new {caseInfo.CaseName.Cs()}(value);")),
             () => new TsMethod(
                 name,
                 returnType,
                 TsList.Create<TsParam>(),
                 mods,
-                Maybe<string>.Some($"    => new {caseInfo.CaseName.Cs()}();")));
+                Maybe.Some($"    => new {caseInfo.CaseName.Cs()}();")));
     }
 
     private static TsMethod MatchMethod(TsList<CaseInfo> caseNamesAndTypes)
@@ -189,7 +189,7 @@ public class UnionGenerator : TypeGenerator
 
         var parameters =
             TsList.Create<TsParam>(
-                caseNamesAndTypes.Select(
+                caseNamesAndTypes.Select<TsParam>(
                     t
                         => new TsParam(
                             new TsTypeRef(
@@ -221,7 +221,7 @@ public class UnionGenerator : TypeGenerator
         var mods = new TsMemberMods(ETsVisibility.Public, new TsAbstractMod(false), new TsStaticMod(false));
 
         var bodySrc =
-            Maybe<string>.Some(
+            Maybe.Some(
                 $$"""
                 {
                     switch(this)

@@ -13,6 +13,7 @@ public record TsProp(
     : TsMember(Mods)
 {
     public string Cs() => $"{Mods.Cs()} {Type.Cs()} {Id.Cs()} {Body.Cs()}";
+    public string CsAssign(string csExpression) => $"{Id.Cs()} = {csExpression};";
 
     #region Equality Members
 

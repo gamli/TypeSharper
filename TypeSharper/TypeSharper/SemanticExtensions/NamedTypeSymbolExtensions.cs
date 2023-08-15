@@ -16,13 +16,13 @@ public static class NamedTypeSymbolExtensions
 {
     public static Maybe<TsTypeRef> BaseType(this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.BaseType == null
-            ? Maybe<TsTypeRef>.NONE
-            : Maybe<TsTypeRef>.Some(namedTypeSymbol.BaseType.ToTypeRef());
+            ? Maybe.None<TsTypeRef>()
+            : Maybe.Some(namedTypeSymbol.BaseType.ToTypeRef());
 
     public static Maybe<TsTypeRef> ContainingType(this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.ContainingType == null
-            ? Maybe<TsTypeRef>.NONE
-            : Maybe<TsTypeRef>.Some(namedTypeSymbol.ContainingType.ToTypeRef());
+            ? Maybe.None<TsTypeRef>()
+            : Maybe.Some(namedTypeSymbol.ContainingType.ToTypeRef());
 
     public static IEnumerable<ITypeSymbol> ContainingTypeHierarchy(this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.ContainingType == null
@@ -42,8 +42,8 @@ public static class NamedTypeSymbolExtensions
         {
             return new TsType(
                 name,
-                Maybe<TsTypeRef>.NONE,
-                Maybe<TsTypeRef>.NONE,
+                Maybe.None<TsTypeRef>(),
+                Maybe.None<TsTypeRef>(),
                 namedTypeSymbol.ContainingNamespace.ToNs(),
                 TsType.EKind.Special,
                 new TsTypeMods(

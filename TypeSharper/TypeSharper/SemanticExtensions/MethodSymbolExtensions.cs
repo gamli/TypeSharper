@@ -16,7 +16,7 @@ public static class MethodSymbolExtensions
             ?.Body
             ?.GetText()
             .ToString();
-        return csBody == null ? Maybe<string>.NONE : Maybe<string>.Some(csBody);
+        return csBody == null ? Maybe.None<string>() : Maybe.Some(csBody);
     }
 
     public static TsCtor ToCtor(this IMethodSymbol methodSymbol)

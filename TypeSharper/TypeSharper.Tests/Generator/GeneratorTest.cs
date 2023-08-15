@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using DiffPlex.DiffBuilder.Model;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,14 +14,24 @@ namespace TypeSharper.Tests.Generator;
 
 public static class GeneratorTest
 {
-    public static GeneratorDriverRunResult ExpectEmptyOutput(string input) => ExpectOutput(input);
+    private static readonly Regex _whitespaceRegex = new($"\\s+");
 
-    public static GeneratorDriverRunResult ExpectOutput(string input, string expectedOutput)
-        => ExpectOutput(input, (".g.cs", expectedOutput));
+    public static GeneratorDriverRunResult ExpectEmptyOutput(string input)
+        => ExpectOutput(input, Array.Empty<(string fileName, IEnumerable<string> expectedCode)>());
+
+    public static GeneratorDriverRunResult ExpectOutput(string input, params string[] expectedOutputs)
+        => ExpectOutput(input, (".g.cs", expectedOutputs));
 
     public static GeneratorDriverRunResult ExpectOutput(
         string input,
         params (string fileName, string expectedCode)[] expectedFiles)
+        => ExpectOutput(
+            input,
+            expectedFiles.Select(t => (t.fileName, (IEnumerable<string>)new[] { t.expectedCode })).ToArray());
+
+    public static GeneratorDriverRunResult ExpectOutput(
+        string input,
+        params (string fileName, IEnumerable<string> expectedCodes)[] expectedFiles)
     {
         var result = Succeed(input);
 
@@ -27,43 +40,41 @@ public static class GeneratorTest
 
         userGeneratedFiles.Should().HaveSameCount(expectedFiles);
 
-        if (expectedFiles.Any())
+        foreach (var t in expectedFiles)
         {
-            expectedFiles
+            var (expectedFileName, expectedCodes) = t;
+
+            userGeneratedFiles
+                .Select(tree => tree.FilePath)
                 .Should()
-                .AllSatisfy(
-                    t =>
-                    {
-                        var (expectedFileName, expectedCode) = t;
+                .Contain(path => path.EndsWith(expectedFileName));
 
-                        userGeneratedFiles
-                            .Select(tree => tree.FilePath)
-                            .Should()
-                            .Contain(path => path.EndsWith(expectedFileName));
+            var generatedSrc =
+                userGeneratedFiles
+                    .Single(tree => tree.FilePath.EndsWith(expectedFileName))
+                    .GetText()
+                    .ToString()
+                    .ReplaceLineEndings("\n");
 
-                        var generatedSrc =
-                            userGeneratedFiles
-                                .Single(tree => tree.FilePath.EndsWith(expectedFileName))
-                                .GetText()
-                                .ToString()
-                                .ReplaceLineEndings("\n");
+            foreach (var expectedCode in expectedCodes)
+            {
+                var expectedSrc =
+                    Formatter
+                        .Format(
+                            CSharpSyntaxTree.ParseText(expectedCode).GetRoot(),
+                            new AdhocWorkspace())
+                        .ToFullString();
 
-                        var expectedSrc =
-                            Formatter
-                                .Format(
-                                    CSharpSyntaxTree.ParseText(expectedCode).GetRoot(),
-                                    new AdhocWorkspace())
-                                .ToFullString()
-                                .ReplaceLineEndings("\n");
+                Diffplex.Print(generatedSrc, expectedSrc);
 
-                        StringDiff.Print(generatedSrc, expectedSrc);
-
-                        generatedSrc.Should().Contain(expectedSrc);
-                    });
+                NormalizeCs(generatedSrc).Should().Contain(NormalizeCs(expectedSrc));
+            }
         }
 
         return result;
     }
+
+    private static string NormalizeCs(string cs) => _whitespaceRegex.Replace(cs.ReplaceLineEndings("\n"), " ");
 
     public static GeneratorDriverRunResult Fail(EDiagnosticsCode code, IEnumerable<string> sources)
         => Fail(code, sources.ToArray());

@@ -6,14 +6,18 @@ using TypeSharper.Support;
 
 namespace TypeSharper.Tests;
 
-public class StringDiff
+public class Diffplex
 {
-    public static void Print(string str1, string str2)
+    public static void Print(string str1, string str2, params ChangeType[] changeTypesToIgnore)
     {
         var diff = InlineDiffBuilder.Diff(str1, str2);
 
         var savedColor = Console.ForegroundColor;
-        foreach (var line in diff.Lines)
+        foreach (var line
+                 in diff
+                    .Lines
+                    .Where(line => !changeTypesToIgnore.Contains(line.Type))
+                    .ContextWhere(4, line => line.Type != ChangeType.Unchanged))
         {
             switch (line.Type)
             {
@@ -33,6 +37,7 @@ public class StringDiff
                     Console.ForegroundColor = ConsoleColor.DarkYellow;
                     Console.Write("? ");
                     break;
+                case ChangeType.Unchanged:
                 default:
                     Console.ForegroundColor = ConsoleColor.Gray;
                     Console.Write("  ");

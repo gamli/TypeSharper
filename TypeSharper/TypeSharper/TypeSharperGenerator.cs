@@ -101,11 +101,11 @@ public class TypeSharperGenerator : IIncrementalGenerator
                     .Aggregate(
                         TsModel.New(),
                         (current, typeSymbol) => current.AddType(typeSymbol.ToType())),
-                Maybe<INamedTypeSymbol>.NONE);
+                Maybe.None<INamedTypeSymbol>());
         }
         catch (TsModelCreationSymbolErrorException e)
         {
-            return (new TsModel(new TsDict<TsTypeRef, TsType>()), Maybe<INamedTypeSymbol>.Some(e.Symbol));
+            return (new TsModel(new TsDict<TsTypeRef, TsType>()), Maybe.Some(e.Symbol));
         }
     }
 
@@ -198,7 +198,7 @@ public class TypeSharperGenerator : IIncrementalGenerator
         => _typeGenerators =
             new List<TypeGenerator>
                 {
-                    new PickGenerator(), new OmitGenerator(), new UnionGenerator(), new IntersectionGenerator(),
+                    new PickGenerator(), new OmitGenerator(), new TaggedUnionGenerator(), new IntersectionGenerator(),
                 }
                 .ToDictionary(generator => generator.AttributeDefinition(context).TypeRef());
 
@@ -227,7 +227,7 @@ public class TypeSharperGenerator : IIncrementalGenerator
 
             if (!typeGenerator.RunDiagnostics(sourceProductionContext, generatedModel, targetType, targetAttr))
             {
-                return Maybe<TsModel>.NONE;
+                return Maybe.None<TsModel>();
             }
 
             try
@@ -237,11 +237,11 @@ public class TypeSharperGenerator : IIncrementalGenerator
             catch (TsGeneratorException e)
             {
                 e.Code.ReportError(sourceProductionContext, e.FmtMsg, e.FmtArgs);
-                return Maybe<TsModel>.NONE;
+                return Maybe.None<TsModel>();
             }
         }
 
-        return Maybe<TsModel>.Some(generatedModel);
+        return Maybe.Some(generatedModel);
     }
 
     #endregion

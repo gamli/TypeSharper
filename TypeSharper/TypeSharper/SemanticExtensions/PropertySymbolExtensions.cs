@@ -26,16 +26,6 @@ public static class PropertySymbolExtensions
             new TsAbstractMod(
                 propertySymbol.IsAbstract && propertySymbol.ContainingType.TypeKind != TypeKind.Interface),
             new TsStaticMod(propertySymbol.IsStatic));
-    // public static Maybe<string> CsBody(this IMethodSymbol methodSymbol)
-    // {
-    //     var csBody =
-    //         ((MethodDeclarationSyntax?)methodSymbol.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax())
-    //         ?.Body
-    //         ?.GetText()
-    //         .ToString();
-    //     return csBody == null ? Maybe<string>.NONE : Maybe<string>.Some(csBody);
-    // }
-
 
     public static TsProp ToProp(this IPropertySymbol propertySymbol)
         => new(

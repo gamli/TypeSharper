@@ -22,13 +22,13 @@ public static class TypeDeclarationSyntaxExtensions
         {
             if (parent is NamespaceDeclarationSyntax namespaceDeclaration)
             {
-                return Maybe<NamespaceDeclarationSyntax>.Some(namespaceDeclaration);
+                return Maybe.Some(namespaceDeclaration);
             }
 
             parent = parent.Parent;
         }
 
-        return Maybe<NamespaceDeclarationSyntax>.NONE;
+        return Maybe.None<NamespaceDeclarationSyntax>();
     }
 
     public static Maybe<TypeDeclarationSyntax> ContainingType(this TypeDeclarationSyntax typeDecl)
@@ -38,13 +38,13 @@ public static class TypeDeclarationSyntaxExtensions
         {
             if (parent is TypeDeclarationSyntax containingType)
             {
-                return Maybe<TypeDeclarationSyntax>.Some(containingType);
+                return Maybe.Some(containingType);
             }
 
             parent = parent.Parent;
         }
 
-        return Maybe<TypeDeclarationSyntax>.NONE;
+        return Maybe.None<TypeDeclarationSyntax>();
     }
 
     public static IEnumerable<TypeDeclarationSyntax> ContainingTypeHierarchy(this TypeDeclarationSyntax typeDecl)

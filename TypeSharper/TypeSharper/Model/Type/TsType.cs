@@ -87,7 +87,7 @@ public record TsType(
     public TsType NewPartial()
         => this with
         {
-            BaseType = Maybe<TsTypeRef>.NONE,
+            BaseType = Maybe.None<TsTypeRef>(),
             Ctors = TsList<TsCtor>.Empty,
             Props = TsList<TsProp>.Empty,
             Methods = TsList<TsMethod>.Empty,
@@ -121,12 +121,12 @@ public record TsType(
     private string CsKind()
         => TypeKind switch
         {
-            EKind.Interface   => "interface",
-            EKind.Class       => "class",
-            EKind.RecordClass => "record",
+            EKind.Interface    => "interface",
+            EKind.Class        => "class",
+            EKind.RecordClass  => "record",
             EKind.Struct       => "struct",
             EKind.RecordStruct => "record struct",
-            _                 => throw new ArgumentOutOfRangeException(nameof(TypeKind), TypeKind, null),
+            _                  => throw new ArgumentOutOfRangeException(nameof(TypeKind), TypeKind, null),
         };
 
     private IEnumerable<string> CsMembersAndNestedTypes(TsModel model)

@@ -51,10 +51,10 @@ public class OmitGeneratorTests
                 public System.String Name { get; set; }
             }
             """);
-    
+
     [Fact]
     public void Omitting_all_properties_generates_no_code()
-        => GeneratorTest.ExpectOutput(
+        => GeneratorTest.ExpectEmptyOutput(
             // language=csharp
             """
             public class OmitSource

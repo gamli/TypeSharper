@@ -51,21 +51,6 @@ public class PickGeneratorTests
                 public System.Boolean IsSample { get; set; }
             }
             """);
-    
-    [Fact]
-    public void Picking_no_property_generates_no_code()
-        => GeneratorTest.ExpectOutput(
-            // language=csharp
-            """
-            public class PickSource
-            {
-                public string Name { get; set; }
-                public bool IsSample { get; set; }
-                public int Count { get; set; }
-            }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>()]
-            public partial class PickTarget { }
-            """);
 
     [Fact]
     public void Picking_a_non_existing_property_is_an_error()
@@ -75,6 +60,21 @@ public class PickGeneratorTests
             """
             public class PickSource { }
             [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
+            public partial class PickTarget { }
+            """);
+
+    [Fact]
+    public void Picking_no_property_generates_no_code()
+        => GeneratorTest.ExpectEmptyOutput(
+            // language=csharp
+            """
+            public class PickSource
+            {
+                public string Name { get; set; }
+                public bool IsSample { get; set; }
+                public int Count { get; set; }
+            }
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>()]
             public partial class PickTarget { }
             """);
 }

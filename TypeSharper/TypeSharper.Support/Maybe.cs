@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace TypeSharper.Support;
 
+public static class Maybe
+{
+    public static Maybe<T> None<T>() => Maybe<T>.NONE;
+    public static Maybe<T> Some<T>(T value) => Maybe<T>.Some(value);
+}
+
 public abstract record Maybe<T>
 {
     public static readonly Maybe<T> NONE = new NoneCase();
@@ -18,24 +24,10 @@ public abstract record Maybe<T>
     }
 
     public Maybe<TResult> IfNone<TResult>(Func<TResult> what)
-    {
-        if (this is NoneCase)
-        {
-            return new Maybe<TResult>.SomeCase(what());
-        }
-
-        return Maybe<TResult>.NONE;
-    }
+        => this is NoneCase ? Maybe.Some(what()) : Maybe.None<TResult>();
 
     public Maybe<TResult> IfNone<TResult>(Func<Maybe<TResult>> what)
-    {
-        if (this is NoneCase)
-        {
-            return what();
-        }
-
-        return Maybe<TResult>.NONE;
-    }
+        => this is NoneCase ? what() : Maybe.None<TResult>();
 
     public void IfSome(Action<T> what)
     {
@@ -46,24 +38,10 @@ public abstract record Maybe<T>
     }
 
     public Maybe<TResult> IfSome<TResult>(Func<T, TResult> what)
-    {
-        if (this is SomeCase some)
-        {
-            return new Maybe<TResult>.SomeCase(what(some.Value));
-        }
-
-        return Maybe<TResult>.NONE;
-    }
+        => this is SomeCase some ? Maybe.Some(what(some.Value)) : Maybe.None<TResult>();
 
     public Maybe<TResult> IfSome<TResult>(Func<T, Maybe<TResult>> what)
-    {
-        if (this is SomeCase some)
-        {
-            return what(some.Value);
-        }
-
-        return Maybe<TResult>.NONE;
-    }
+        => this is SomeCase some ? what(some.Value) : Maybe.None<TResult>();
 
     public void Match(Action<T> ifSome, Action ifNone)
     {
@@ -78,44 +56,16 @@ public abstract record Maybe<T>
     }
 
     public TResult Match<TResult>(Func<T, TResult> ifSome, Func<TResult> ifNone)
-    {
-        if (this is SomeCase some)
-        {
-            return ifSome(some.Value);
-        }
-
-        return ifNone();
-    }
+        => this is SomeCase some ? ifSome(some.Value) : ifNone();
 
     public Maybe<TResult> Match<TResult>(Func<T, Maybe<TResult>> ifSome, Func<TResult> ifNone)
-    {
-        if (this is SomeCase some)
-        {
-            return ifSome(some.Value);
-        }
-
-        return Maybe<TResult>.Some(ifNone());
-    }
+        => this is SomeCase some ? ifSome(some.Value) : Maybe.Some(ifNone());
 
     public Maybe<TResult> Match<TResult>(Func<T, TResult> ifSome, Func<Maybe<TResult>> ifNone)
-    {
-        if (this is SomeCase some)
-        {
-            return Maybe<TResult>.Some(ifSome(some.Value));
-        }
-
-        return ifNone();
-    }
+        => this is SomeCase some ? Maybe.Some(ifSome(some.Value)) : ifNone();
 
     public Maybe<TResult> Match<TResult>(Func<T, Maybe<TResult>> ifSome, Func<Maybe<TResult>> ifNone)
-    {
-        if (this is SomeCase some)
-        {
-            return ifSome(some.Value);
-        }
-
-        return ifNone();
-    }
+        => this is SomeCase some ? ifSome(some.Value) : ifNone();
 
     #region Private
 

@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeSharper.Sample", "TypeS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TypeSharper.Tests", "TypeSharper\TypeSharper.Tests\TypeSharper.Tests.csproj", "{AC3A0DBD-4335-41D1-8DC8-5291DEC35A05}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "TypeSharper.Support", "TypeSharper\TypeSharper.Support\TypeSharper.Support.shproj", "{E8107EEE-8AAE-443F-9840-DF7DB7BA33CF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{AC3A0DBD-4335-41D1-8DC8-5291DEC35A05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC3A0DBD-4335-41D1-8DC8-5291DEC35A05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC3A0DBD-4335-41D1-8DC8-5291DEC35A05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8107EEE-8AAE-443F-9840-DF7DB7BA33CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8107EEE-8AAE-443F-9840-DF7DB7BA33CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8107EEE-8AAE-443F-9840-DF7DB7BA33CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8107EEE-8AAE-443F-9840-DF7DB7BA33CF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
