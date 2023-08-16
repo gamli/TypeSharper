@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using TypeSharper.Support;
 
 namespace TypeSharper.Model.Attr;
 

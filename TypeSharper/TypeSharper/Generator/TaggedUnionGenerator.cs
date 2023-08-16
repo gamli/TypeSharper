@@ -9,7 +9,6 @@ using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
 using TypeSharper.Model.Modifier;
 using TypeSharper.Model.Type;
-using TypeSharper.Support;
 
 namespace TypeSharper.Generator;
 
@@ -66,7 +65,11 @@ public class TaggedUnionGenerator : TypeGenerator
         var ctor =
             new TsCtor(
                 TsList.Create<TsParam>(),
-                new TsMemberMods(ETsVisibility.Private, new TsAbstractMod(false), new TsStaticMod(false)),
+                new TsMemberMods(
+                    ETsVisibility.Private,
+                    new TsAbstractMod(false),
+                    new TsStaticMod(false),
+                    ETsOperator.None),
                 Maybe.Some("{ }"));
 
         var factoryMethods = caseInfos.Select(FactoryMethod);
@@ -143,7 +146,8 @@ public class TaggedUnionGenerator : TypeGenerator
                                 new TsMemberMods(
                                     ETsVisibility.Public,
                                     new TsAbstractMod(false),
-                                    new TsStaticMod(false)),
+                                    new TsStaticMod(false),
+                                    ETsOperator.None),
                                 Maybe.Some("    => Value = value;")))
                         .AddProp(
                             new TsProp(
@@ -152,7 +156,8 @@ public class TaggedUnionGenerator : TypeGenerator
                                 new TsMemberMods(
                                     ETsVisibility.Public,
                                     new TsAbstractMod(false),
-                                    new TsStaticMod(false)),
+                                    new TsStaticMod(false),
+                                    ETsOperator.None),
                                 TsProp.BodyImpl.Accessors(TsList.Create(TsPropAccessor.PublicGet()))));
             });
 
@@ -163,7 +168,11 @@ public class TaggedUnionGenerator : TypeGenerator
     {
         var name = new TsId($"Create{caseInfo.CaseName.Capitalize().Cs()}");
         var returnType = caseInfo.TargetType.Ref();
-        var mods = new TsMemberMods(ETsVisibility.Public, new TsAbstractMod(false), new TsStaticMod(true));
+        var mods = new TsMemberMods(
+            ETsVisibility.Public,
+            new TsAbstractMod(false),
+            new TsStaticMod(true),
+            ETsOperator.None);
 
         return caseInfo.CaseType.Match(
             caseType =>
@@ -218,7 +227,11 @@ public class TaggedUnionGenerator : TypeGenerator
                                 """))
                 .JoinLines();
 
-        var mods = new TsMemberMods(ETsVisibility.Public, new TsAbstractMod(false), new TsStaticMod(false));
+        var mods = new TsMemberMods(
+            ETsVisibility.Public,
+            new TsAbstractMod(false),
+            new TsStaticMod(false),
+            ETsOperator.None);
 
         var bodySrc =
             Maybe.Some(

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TypeSharper.Model.Type;
 
-namespace TypeSharper.Support;
+namespace TypeSharper.Model;
 
 public class TypeDependencyGraph
 {

@@ -1,7 +1,6 @@
 using System.Linq;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
-using TypeSharper.Support;
 
 namespace TypeSharper.Model.Attr.Def;
 

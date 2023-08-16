@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using DiffPlex.DiffBuilder;
 using DiffPlex.DiffBuilder.Model;
-using TypeSharper.Support;
 
 namespace TypeSharper.Tests;
 

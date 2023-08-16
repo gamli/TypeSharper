@@ -9,7 +9,6 @@ using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
 using TypeSharper.Model.Modifier;
 using TypeSharper.Model.Type;
-using TypeSharper.Support;
 
 namespace TypeSharper.Generator;
 
@@ -43,19 +42,20 @@ public class IntersectionGenerator : TypeGenerator
 
     protected override TsModel DoGenerate(TsType targetType, TsAttr attr, TsModel model)
     {
-        var propsPresentInAllTypes = PropsPresentInAllTypes(attr, model).ToList();
+        var newPartial = targetType.NewPartial();
+
+        var props = PropsPresentInAllTypes(attr, model).ToList();
+
+        if (newPartial.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct)
+        {
+            newPartial = newPartial.SetPrimaryCtor(GeneratePrimaryCtor(props));
+        }
 
         var intersectionType =
-            targetType
-                .NewPartial()
-                .AddCtors(GenerateCtors(propsPresentInAllTypes, attr, model))
-                .AddProps(propsPresentInAllTypes);
-
-        if (intersectionType.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct)
-        {
-            intersectionType =
-                intersectionType.SetPrimaryCtor(GeneratePrimaryCtor(propsPresentInAllTypes));
-        }
+            newPartial
+                .AddCtors(GenerateCtors(props, newPartial, attr))
+                .AddProps(props)
+                .AddMethods(GenerateCastOperators(props, newPartial, attr));
 
         return model.AddType(intersectionType);
     }
@@ -66,34 +66,68 @@ public class IntersectionGenerator : TypeGenerator
 
     private static TsList<TsTypeRef> ConstituentTypes(TsAttr attr) => attr.TypeArgs;
 
-    private static TsCtor GenerateConstructorForConstituentType(TsType type, IEnumerable<TsProp> propsPresentInAllTypes)
-        => new(
-            new TsList<TsParam>(new TsParam(type.Ref(), new TsId("value"), false)),
-            new TsMemberMods(
-                ETsVisibility.Public,
-                new TsAbstractMod(false),
-                new TsStaticMod(false)),
-            Maybe.Some(
-                type.PrimaryCtor.Match(
-                    ctor =>
-                        $": this({ctor.Params.Select(param => new TsQualifiedId("value", param.Id.Cs()).Cs()).JoinList().Indent()}) {{ }}",
-                    () =>
-                        $$"""
-                        {
-                        {{propsPresentInAllTypes.Select(prop => prop.CsAssign(new TsQualifiedId("value", prop.Id.Cs()).Cs())).JoinLines().Indent()}}
-                        }
-                        """)));
+    private static IEnumerable<TsMethod> GenerateCastOperators(
+        IEnumerable<TsProp> props,
+        TsType targetType,
+        TsAttr attr)
+    {
+        return ConstituentTypes(attr)
+            .Select(
+                type => new TsMethod(
+                    new TsId(type.Id.Cs().Replace(".", "_")),
+                    targetType.Ref(),
+                    new TsList<TsParam>(new TsParam(type, new TsId("valueToCast"), false)),
+                    new TsMemberMods(
+                        ETsVisibility.Public,
+                        new TsAbstractMod(false),
+                        new TsStaticMod(true),
+                        ETsOperator.Implicit),
+                    Maybe.Some(
+                        targetType.PrimaryCtor.Match(
+                            ctor =>
+                                $"=> new ({props.Select(prop => prop.CsGetFrom("valueToCast")).JoinList()});"
+                                    .Indent(),
+                            () =>
+                                $$"""
+                                    => new {{targetType.Id.Cs()}}
+                                    {
+                                    {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToCast"))).JoinList()}}
+                                    };
+                                    """.Indent()))));
+    }
 
     private static IEnumerable<TsCtor> GenerateCtors(
-        IEnumerable<TsProp> propsPresentInAllTypes,
-        TsAttr attr,
-        TsModel model)
+        IEnumerable<TsProp> props,
+        TsType targetType,
+        TsAttr attr)
         => ConstituentTypes(attr)
-            .Select(type => GenerateConstructorForConstituentType(model.Resolve(type), propsPresentInAllTypes));
+            .Select(
+                typeRef =>
+                {
+                    return (TsCtor)new TsCtor(
+                        new TsList<TsParam>(new TsParam(typeRef, new TsId("valueToConvert"), false)),
+                        new TsMemberMods(
+                            ETsVisibility.Public,
+                            new TsAbstractMod(false),
+                            new TsStaticMod(false),
+                            ETsOperator.None),
+                        Maybe.Some(
+                            targetType
+                                .PrimaryCtor
+                                .Match(
+                                    _ =>
+                                        $": this({props.Select(prop => prop.CsGetFrom("valueToConvert")).JoinList()}) {{ }}",
+                                    () =>
+                                        $$"""
+                                        {
+                                        {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToConvert")) + ";").JoinLines()}}
+                                        }
+                                        """)));
+                });
 
 
-    private static TsPrimaryCtor GeneratePrimaryCtor(IEnumerable<TsProp> propsPresentInAllTypes)
-        => new(TsList.Create(propsPresentInAllTypes.Select(prop => new TsParam(prop.Type, prop.Id, false))));
+    private static TsPrimaryCtor GeneratePrimaryCtor(IEnumerable<TsProp> props)
+        => new(TsList.Create(props.Select(prop => new TsParam(prop.Type, prop.Id, false))));
 
     private static IEnumerable<TsProp> PropsPresentInAllTypes(TsAttr attr, TsModel model)
         => ConstituentTypes(attr)

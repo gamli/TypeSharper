@@ -1,5 +1,3 @@
-using TypeSharper.Support;
-
 namespace TypeSharper.Model.Member;
 
 public record TsPrimaryCtor(TsList<TsParam> Params)

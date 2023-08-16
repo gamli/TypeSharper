@@ -4,7 +4,6 @@ using System.Linq;
 using TypeSharper.Model.Attr;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
-using TypeSharper.Support;
 
 namespace TypeSharper.Model.Type;
 
@@ -180,53 +179,6 @@ public record TsType(
 
     private string CsSignature()
         => $"{Mods.Cs().MarginRight()}{CsKind()} {Id.Cs()}{CsBaseType().AddLeftIfNotEmpty(": ")}";
-
-    #endregion
-
-    #region Equality Members
-
-    public virtual bool Equals(TsType? other)
-    {
-        if (ReferenceEquals(null, other))
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        return Id.Equals(other.Id)
-               && BaseType.Equals(other.BaseType)
-               && ContainingType.Equals(other.ContainingType)
-               && Ns.Equals(other.Ns)
-               && TypeKind == other.TypeKind
-               && Mods.Equals(other.Mods)
-               && PrimaryCtor.Equals(other.PrimaryCtor)
-               && Ctors.Equals(other.Ctors)
-               && Props.Equals(other.Props)
-               && Methods.Equals(other.Methods)
-               && Attrs.Equals(other.Attrs);
-    }
-
-
-    public override int GetHashCode()
-    {
-        var hashCode = new HashCode();
-        hashCode.Add(Id);
-        hashCode.Add(BaseType);
-        hashCode.Add(ContainingType);
-        hashCode.Add(Ns);
-        hashCode.Add((int)TypeKind);
-        hashCode.Add(Mods);
-        hashCode.Add(PrimaryCtor);
-        hashCode.Add(Ctors);
-        hashCode.Add(Props);
-        hashCode.Add(Methods);
-        hashCode.Add(Attrs);
-        return hashCode.ToHashCode();
-    }
 
     #endregion
 

@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis;
 using TypeSharper.Model;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Type;
-using TypeSharper.Support;
 
 namespace TypeSharper.Diagnostics;
 

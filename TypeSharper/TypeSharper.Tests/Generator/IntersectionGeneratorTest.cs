@@ -1,5 +1,4 @@
 using System.Linq;
-using TypeSharper.Support;
 using Xunit;
 
 namespace TypeSharper.Tests.Generator;
@@ -46,9 +45,9 @@ public class IntersectionGeneratorTests
                     typeName =>
                         // language=csharp
                         $$"""
-                        public IntersectionTarget({{typeName}} value)
+                        public IntersectionTarget({{typeName}} valueToConvert)
                         {
-                            Prop10 = value.Prop10;
+                            Prop10 = valueToConvert.Prop10;
                         }
                         """)
                 .Append(
@@ -59,6 +58,81 @@ public class IntersectionGeneratorTests
                     "public partial class IntersectionTarget")
                 .ToArray());
     }
+
+    [Fact]
+    public void Intersecting_records_will_create_a_primary_constructor()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            public class Type1
+            {
+                public int A { get; set; }
+                public int B { get; set; }
+                public int C { get; set; }
+            }
+            public class Type2
+            {
+                public int A { get; set; }
+                public int B { get; set; }
+                public int D { get; set; }
+            }
+            [TypeSharperIntersection<Type1, Type2>()]
+            public partial record IntersectionTarget { }
+            """,
+            // language=csharp
+            """
+            public partial record IntersectionTarget(System.Int32 A, System.Int32 B)
+            """,
+            // language=csharp
+            """
+            public static implicit operator IntersectionTarget(Type1 valueToCast)
+                => new (valueToCast.A, valueToCast.B);
+            """,
+            // language=csharp
+            """
+            public static implicit operator IntersectionTarget(Type2 valueToCast)
+                => new (valueToCast.A, valueToCast.B);
+            """);
+
+    [Fact]
+    public void Intersecting_two_types_creates_cast_operators_for_each_type()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            public class Type1
+            {
+                public int A { get; set; }
+                public int B { get; set; }
+                public int C { get; set; }
+            }
+            public class Type2
+            {
+                public int A { get; set; }
+                public int C { get; set; }
+            }
+            [TypeSharperIntersection<Type1, Type2>()]
+            public partial class IntersectionTarget { }
+            """,
+            // language=csharp
+            """
+            public static implicit operator IntersectionTarget(Type1 valueToCast)
+                => new IntersectionTarget
+                {
+                    A = valueToCast.A,
+                    C = valueToCast.C
+                };
+            """,
+            // language=csharp
+            """
+            public static implicit operator IntersectionTarget(Type2 valueToCast)
+                => new IntersectionTarget
+                {
+                    A = valueToCast.A,
+                    C = valueToCast.C
+                };
+            """);
 
     [Fact]
     public void Intersecting_two_types_creates_constructors_for_each_type()
@@ -82,18 +156,18 @@ public class IntersectionGeneratorTests
             """,
             // language=csharp
             """
-            public IntersectionTarget(Type2 value)
+            public IntersectionTarget(Type1 valueToConvert)
             {
-                A = value.A;
-                C = value.C;
+                A = valueToConvert.A;
+                C = valueToConvert.C;
             }
             """,
             // language=csharp
             """
-            public IntersectionTarget(Type2 value)
+            public IntersectionTarget(Type2 valueToConvert)
             {
-                A = value.A;
-                C = value.C;
+                A = valueToConvert.A;
+                C = valueToConvert.C;
             }
             """);
 
@@ -143,14 +217,14 @@ public class IntersectionGeneratorTests
             """,
             // language=csharp
             """
-            public IntersectionTarget(Type1 value)
+            public IntersectionTarget(Type1 valueToConvert)
             {
                 
             }
             """,
             // language=csharp
             """
-            public IntersectionTarget(Type2 value)
+            public IntersectionTarget(Type2 valueToConvert)
             {
                 
             }

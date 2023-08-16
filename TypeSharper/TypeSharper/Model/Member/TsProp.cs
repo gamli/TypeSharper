@@ -1,7 +1,6 @@
 using System;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Type;
-using TypeSharper.Support;
 
 namespace TypeSharper.Model.Member;
 
@@ -13,41 +12,10 @@ public record TsProp(
     : TsMember(Mods)
 {
     public string Cs() => $"{Mods.Cs()} {Type.Cs()} {Id.Cs()} {Body.Cs()}";
-    public string CsAssign(string csExpression) => $"{Id.Cs()} = {csExpression};";
-
-    #region Equality Members
-
-    public virtual bool Equals(TsProp? other)
-    {
-        if (ReferenceEquals(null, other))
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, other))
-        {
-            return true;
-        }
-
-        return base.Equals(other)
-               && Type.Equals(other.Type)
-               && Id.Equals(other.Id)
-               && Body.Equals(other.Body);
-    }
-
-    public override int GetHashCode()
-    {
-        unchecked
-        {
-            var hashCode = base.GetHashCode();
-            hashCode = (hashCode * 397) ^ Type.GetHashCode();
-            hashCode = (hashCode * 397) ^ Id.GetHashCode();
-            hashCode = (hashCode * 397) ^ Body.GetHashCode();
-            return hashCode;
-        }
-    }
-
-    #endregion
+    public string CsGetFrom(params string[] ids) => CsGetFrom(new TsQualifiedId(ids));
+    public string CsGetFrom(params TsId[] ids) => CsGetFrom(new TsQualifiedId(ids));
+    public string CsGetFrom(TsQualifiedId fromObjectId) => $"{fromObjectId.Cs()}.{Id.Cs()}";
+    public string CsSet(string value) => $"{Id.Cs()} = {value}";
 
     #region Nested types
 

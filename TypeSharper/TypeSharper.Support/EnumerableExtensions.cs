@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TypeSharper.Support;
+namespace TypeSharper;
 
 public static class EnumerableExtensions
 {

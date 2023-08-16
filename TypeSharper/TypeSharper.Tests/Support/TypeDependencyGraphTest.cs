@@ -4,9 +4,9 @@ using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using TypeSharper.Model;
 using TypeSharper.Model.Type;
 using TypeSharper.SemanticExtensions;
-using TypeSharper.Support;
 using Xunit;
 
 namespace TypeSharper.Tests.Support;

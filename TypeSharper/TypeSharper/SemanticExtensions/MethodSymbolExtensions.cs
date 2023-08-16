@@ -3,7 +3,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeSharper.Model.Member;
 using TypeSharper.Model.Modifier;
-using TypeSharper.Support;
 
 namespace TypeSharper.SemanticExtensions;
 
@@ -29,7 +28,8 @@ public static class MethodSymbolExtensions
         => new(
             methodSymbol.DeclaredAccessibility.ToVisibility(),
             new TsAbstractMod(methodSymbol.IsAbstract),
-            new TsStaticMod(methodSymbol.IsStatic));
+            new TsStaticMod(methodSymbol.IsStatic),
+            ETsOperator.None);
 
     public static TsMethod ToMethod(this IMethodSymbol methodSymbol)
         => new(

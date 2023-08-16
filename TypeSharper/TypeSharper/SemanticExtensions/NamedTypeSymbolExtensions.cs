@@ -8,7 +8,6 @@ using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
 using TypeSharper.Model.Modifier;
 using TypeSharper.Model.Type;
-using TypeSharper.Support;
 
 namespace TypeSharper.SemanticExtensions;
 

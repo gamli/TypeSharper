@@ -34,7 +34,8 @@ public static class PropertySymbolExtensions
             propertySymbol.DeclaredAccessibility.ToVisibility(),
             new TsAbstractMod(
                 propertySymbol.IsAbstract && propertySymbol.ContainingType.TypeKind != TypeKind.Interface),
-            new TsStaticMod(propertySymbol.IsStatic));
+            new TsStaticMod(propertySymbol.IsStatic),
+            ETsOperator.None);
 
     public static TsProp ToProp(this IPropertySymbol propertySymbol)
         => new(

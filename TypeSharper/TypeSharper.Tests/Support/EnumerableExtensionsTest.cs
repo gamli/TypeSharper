@@ -1,6 +1,5 @@
 using System;
 using FluentAssertions;
-using TypeSharper.Support;
 using Xunit;
 
 namespace TypeSharper.Tests.Support;

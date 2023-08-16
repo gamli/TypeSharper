@@ -1,5 +1,3 @@
-using TypeSharper.Support;
-
 namespace TypeSharper.Model.Identifier;
 
 public record TsId(string Value)

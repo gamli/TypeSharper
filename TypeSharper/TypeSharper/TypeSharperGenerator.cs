@@ -13,7 +13,6 @@ using TypeSharper.Model;
 using TypeSharper.Model.Attr;
 using TypeSharper.Model.Type;
 using TypeSharper.SemanticExtensions;
-using TypeSharper.Support;
 
 namespace TypeSharper;
 
