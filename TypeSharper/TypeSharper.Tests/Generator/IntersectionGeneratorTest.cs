@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using TypeSharper.Support;
 using Xunit;
@@ -7,43 +6,6 @@ namespace TypeSharper.Tests.Generator;
 
 public class IntersectionGeneratorTests
 {
-    [Fact]
-    public void Intersecting_two_types_creates_constructors_for_each_type()
-        => GeneratorTest.ExpectOutput(
-            // language=csharp
-            """
-            using TypeSharper.Attributes;
-            public class Type1
-            {
-                public int A { get; set; }
-                public int B { get; set; }
-                public int C { get; set; }
-            }
-            public class Type2
-            {
-                public int A { get; set; }
-                public int C { get; set; }
-            }
-            [TypeSharperIntersection<Type1, Type2>()]
-            public partial class IntersectionTarget { }
-            """,
-            // language=csharp
-            """
-            public IntersectionTarget(Type2 value)
-            {
-                A = value.A;
-                C = value.C;
-            }
-            """,
-            // language=csharp
-            """
-            public IntersectionTarget(Type2 value)
-            {
-                A = value.A;
-                C = value.C;
-            }
-            """);
-    
     [Fact]
     public void Intersecting_many_types_produces_a_type_with_properties_present_in_all()
     {
@@ -97,6 +59,43 @@ public class IntersectionGeneratorTests
                     "public partial class IntersectionTarget")
                 .ToArray());
     }
+
+    [Fact]
+    public void Intersecting_two_types_creates_constructors_for_each_type()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            public class Type1
+            {
+                public int A { get; set; }
+                public int B { get; set; }
+                public int C { get; set; }
+            }
+            public class Type2
+            {
+                public int A { get; set; }
+                public int C { get; set; }
+            }
+            [TypeSharperIntersection<Type1, Type2>()]
+            public partial class IntersectionTarget { }
+            """,
+            // language=csharp
+            """
+            public IntersectionTarget(Type2 value)
+            {
+                A = value.A;
+                C = value.C;
+            }
+            """,
+            // language=csharp
+            """
+            public IntersectionTarget(Type2 value)
+            {
+                A = value.A;
+                C = value.C;
+            }
+            """);
 
     [Fact]
     public void Intersecting_two_types_produces_a_type_with_properties_present_in_both()

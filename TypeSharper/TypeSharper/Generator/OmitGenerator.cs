@@ -22,11 +22,24 @@ public class OmitGenerator : MemberSelectionTypeGenerator
         TsAttr attr)
     {
         var selectedMemberNamesSet = new HashSet<TsId>(selectedPropertyNames);
-        return model
-            .AddType(
-                targetType
-                    .NewPartial()
-                    .AddProps(fromType.Props.Where(m => !selectedMemberNamesSet.Contains(m.Id))));
+        return model.AddType(
+            targetType.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct
+                ? targetType
+                  .NewPartial()
+                  .SetPrimaryCtor(
+                      new TsPrimaryCtor(
+                          fromType
+                              .Props
+                              .Where(m => !selectedMemberNamesSet.Contains(m.Id))
+                              .Select(
+                                  propertyName =>
+                                  {
+                                      var prop = fromTypePropertyLookup[propertyName.Id];
+                                      return new TsParam(prop.Type, prop.Id, false);
+                                  })))
+                : targetType
+                  .NewPartial()
+                  .AddProps(fromType.Props.Where(m => !selectedMemberNamesSet.Contains(m.Id))));
     }
 
     #endregion

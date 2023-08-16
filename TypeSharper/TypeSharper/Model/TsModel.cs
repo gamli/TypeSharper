@@ -17,7 +17,7 @@ public record TsModel(TsDict<TsTypeRef, TsType> TypeLookup)
             ? this with
             {
                 TypeLookup =
-                TypeLookup.Set(typeRef, existingType.AddMembers(type.Ctors, type.Props, type.Methods, type.Attrs)),
+                TypeLookup.Set(typeRef, existingType.Merge(type)),
             }
             : this with { TypeLookup = TypeLookup.Add(typeRef, type) };
     }

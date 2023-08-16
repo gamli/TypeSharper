@@ -36,11 +36,10 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
         TsModel model,
         TsType targetType,
         TsAttr attr)
-    {
-        var fromType = FromType(attr, model);
-        return Diag.RunPropertyDoesNotExistDiagnostics(sourceProductionContext, fromType, SelectedPropertyNames(attr))
-               && Diag.RunTypeIsInterfaceOrClassOrStructDiagnostics(sourceProductionContext, fromType);
-    }
+        => Diag.RunPropertyDoesNotExistDiagnostics(
+            sourceProductionContext,
+            FromType(attr, model),
+            SelectedPropertyNames(attr));
 
     #region Protected
 

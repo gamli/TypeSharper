@@ -17,6 +17,15 @@ public static class PropertySymbolExtensions
     public static string? CsExpressionBody(this IPropertySymbol propertySymbol)
         => ((PropertyDeclarationSyntax)propertySymbol.Syntax()).ExpressionBody?.GetText().ToString();
 
+    public static bool IsDefinedInPrimaryConstructor(this IPropertySymbol propertySymbol)
+        => propertySymbol
+           .ContainingType
+           .InstanceConstructors
+           .SingleOrDefault(SymbolExtensions.IsPrimaryCtor)
+           ?.Parameters
+           .Any(p => p.Name == propertySymbol.Name)
+           == true;
+
     public static SyntaxNode Syntax(this ISymbol symbol) => symbol.DeclaringSyntaxReferences.Single().GetSyntax();
 
 
@@ -36,6 +45,11 @@ public static class PropertySymbolExtensions
 
     public static TsProp.BodyImpl ToPropBodyImpl(this IPropertySymbol propertySymbol)
     {
+        if (propertySymbol.IsDefinedInPrimaryConstructor())
+        {
+            return TsProp.BodyImpl.Accessors(TsList.Create(TsPropAccessor.PublicGet(), TsPropAccessor.PublicInit()));
+        }
+
         var csExpressionBody = propertySymbol.CsExpressionBody();
         if (csExpressionBody != null)
         {

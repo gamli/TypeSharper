@@ -101,21 +101,4 @@ public static class Diag
 
         return false;
     }
-
-    public static bool RunTypeIsInterfaceOrClassOrStructDiagnostics(
-        SourceProductionContext sourceProductionContext,
-        TsType type)
-    {
-        if (type.TypeKind is TsType.EKind.Interface or TsType.EKind.Class or TsType.EKind.Struct)
-        {
-            return true;
-        }
-
-        EDiagnosticsCode.TypeMustBeInterfaceOrClass.ReportError(
-            sourceProductionContext,
-            "The type {0} must be a an interface or a class (not a record).",
-            type.Ref().Cs());
-
-        return false;
-    }
 }

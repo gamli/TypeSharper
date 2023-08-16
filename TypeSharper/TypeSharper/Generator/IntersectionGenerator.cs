@@ -32,16 +32,32 @@ public class IntersectionGenerator : TypeGenerator
                                         .Range(0, parameterCount)
                                         .Select(parameterIdx => new TsId($"TType_{parameterIdx}")))))));
 
+    public override bool RunDiagnostics(
+        SourceProductionContext sourceProductionContext,
+        TsModel model,
+        TsType targetType,
+        TsAttr attr)
+        => true;
+
     #region Protected
 
     protected override TsModel DoGenerate(TsType targetType, TsAttr attr, TsModel model)
     {
         var propsPresentInAllTypes = PropsPresentInAllTypes(attr, model).ToList();
-        return model.AddType(
+
+        var intersectionType =
             targetType
                 .NewPartial()
-                .AddCtors(GenerateConstructors(propsPresentInAllTypes, attr, model))
-                .AddProps(propsPresentInAllTypes));
+                .AddCtors(GenerateCtors(propsPresentInAllTypes, attr, model))
+                .AddProps(propsPresentInAllTypes);
+
+        if (intersectionType.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct)
+        {
+            intersectionType =
+                intersectionType.SetPrimaryCtor(GeneratePrimaryCtor(propsPresentInAllTypes));
+        }
+
+        return model.AddType(intersectionType);
     }
 
     #endregion
@@ -49,6 +65,35 @@ public class IntersectionGenerator : TypeGenerator
     #region Private
 
     private static TsList<TsTypeRef> ConstituentTypes(TsAttr attr) => attr.TypeArgs;
+
+    private static TsCtor GenerateConstructorForConstituentType(TsType type, IEnumerable<TsProp> propsPresentInAllTypes)
+        => new(
+            new TsList<TsParam>(new TsParam(type.Ref(), new TsId("value"), false)),
+            new TsMemberMods(
+                ETsVisibility.Public,
+                new TsAbstractMod(false),
+                new TsStaticMod(false)),
+            Maybe.Some(
+                type.PrimaryCtor.Match(
+                    ctor =>
+                        $": this({ctor.Params.Select(param => new TsQualifiedId("value", param.Id.Cs()).Cs()).JoinList().Indent()}) {{ }}",
+                    () =>
+                        $$"""
+                        {
+                        {{propsPresentInAllTypes.Select(prop => prop.CsAssign(new TsQualifiedId("value", prop.Id.Cs()).Cs())).JoinLines().Indent()}}
+                        }
+                        """)));
+
+    private static IEnumerable<TsCtor> GenerateCtors(
+        IEnumerable<TsProp> propsPresentInAllTypes,
+        TsAttr attr,
+        TsModel model)
+        => ConstituentTypes(attr)
+            .Select(type => GenerateConstructorForConstituentType(model.Resolve(type), propsPresentInAllTypes));
+
+
+    private static TsPrimaryCtor GeneratePrimaryCtor(IEnumerable<TsProp> propsPresentInAllTypes)
+        => new(TsList.Create(propsPresentInAllTypes.Select(prop => new TsParam(prop.Type, prop.Id, false))));
 
     private static IEnumerable<TsProp> PropsPresentInAllTypes(TsAttr attr, TsModel model)
         => ConstituentTypes(attr)
@@ -76,27 +121,6 @@ public class IntersectionGenerator : TypeGenerator
                })
            .Where(kv => kv.Value.count == attr.TypeArgs.Count)
            .Select(kv => kv.Value.prop);
-
-    private TsCtor GenerateConstructorForConstituentType(TsType type, IEnumerable<TsProp> propsPresentInAllTypes)
-        => new(
-            new TsList<TsParam>(new TsParam(type.Ref(), new TsId("value"), false)),
-            new TsMemberMods(
-                ETsVisibility.Public,
-                new TsAbstractMod(false),
-                new TsStaticMod(false)),
-            Maybe.Some(
-                $$"""
-                {
-                {{propsPresentInAllTypes.Select(prop => prop.CsAssign(new TsQualifiedId("value", prop.Id.Cs()).Cs())).JoinLines().Indent()}}
-                }
-                """));
-
-    private IEnumerable<TsCtor> GenerateConstructors(
-        IEnumerable<TsProp> propsPresentInAllTypes,
-        TsAttr attr,
-        TsModel model)
-        => ConstituentTypes(attr)
-            .Select(type => GenerateConstructorForConstituentType(model.Resolve(type), propsPresentInAllTypes));
 
     #endregion
 }

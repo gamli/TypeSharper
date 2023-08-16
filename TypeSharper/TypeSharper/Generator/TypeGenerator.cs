@@ -12,6 +12,12 @@ public abstract class TypeGenerator
 {
     public abstract TsAttrDef AttributeDefinition(IncrementalGeneratorInitializationContext context);
 
+    public abstract bool RunDiagnostics(
+        SourceProductionContext sourceProductionContext,
+        TsModel model,
+        TsType targetType,
+        TsAttr attr);
+
     public TsModel Generate(TsType targetType, TsAttr attr, TsModel model)
     {
         try
@@ -26,13 +32,6 @@ public abstract class TypeGenerator
                 "Unknown generator error: " + e.Message);
         }
     }
-
-    public virtual bool RunDiagnostics(
-        SourceProductionContext sourceProductionContext,
-        TsModel model,
-        TsType targetType,
-        TsAttr attr)
-        => true;
 
     #region Protected
 

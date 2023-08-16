@@ -53,6 +53,7 @@ public static class NamedTypeSymbolExtensions
                     new TsSealedMod(true),
                     new TsPartialMod(false),
                     new TsTargetTypeMod(false)),
+                Maybe<TsPrimaryCtor>.NONE,
                 new TsList<TsCtor>(),
                 new TsList<TsProp>(),
                 new TsList<TsMethod>(),
@@ -70,6 +71,12 @@ public static class NamedTypeSymbolExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(namedTypeSymbol), namedTypeSymbol, null),
             };
 
+        var primaryCtor =
+            namedTypeSymbol
+                .InstanceConstructors
+                .SingleOrDefault(ctor => ctor.IsPrimaryCtor())
+                ?.ToPrimaryCtor();
+
         return new TsType(
             name,
             namedTypeSymbol.BaseType(),
@@ -77,6 +84,7 @@ public static class NamedTypeSymbolExtensions
             namedTypeSymbol.ContainingNamespace.ToNs(),
             typeKind,
             namedTypeSymbol.ToTypeMods(),
+            primaryCtor == null ? Maybe.None<TsPrimaryCtor>() : Maybe.Some(primaryCtor),
             TsList.Create(
                 namedTypeSymbol
                     .InstanceConstructors

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using DiffPlex.DiffBuilder.Model;
 using FluentAssertions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -14,8 +13,6 @@ namespace TypeSharper.Tests.Generator;
 
 public static class GeneratorTest
 {
-    private static readonly Regex _whitespaceRegex = new($"\\s+");
-
     public static GeneratorDriverRunResult ExpectEmptyOutput(string input)
         => ExpectOutput(input, Array.Empty<(string fileName, IEnumerable<string> expectedCode)>());
 
@@ -74,8 +71,6 @@ public static class GeneratorTest
         return result;
     }
 
-    private static string NormalizeCs(string cs) => _whitespaceRegex.Replace(cs.ReplaceLineEndings("\n"), " ");
-
     public static GeneratorDriverRunResult Fail(EDiagnosticsCode code, IEnumerable<string> sources)
         => Fail(code, sources.ToArray());
 
@@ -123,4 +118,12 @@ public static class GeneratorTest
         result.Diagnostics.Should().NotContain(d => d.Severity == DiagnosticSeverity.Error);
         return result;
     }
+
+    #region Private
+
+    private static readonly Regex _whitespaceRegex = new("\\s+");
+
+    private static string NormalizeCs(string cs) => _whitespaceRegex.Replace(cs.ReplaceLineEndings("\n"), " ");
+
+    #endregion
 }

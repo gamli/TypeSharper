@@ -105,18 +105,16 @@ public class TypeGeneratorTests
             """);
 
     [Fact]
-    public void Target_type_record_is_NOT_SUPPORTED()
-        => GeneratorTest.Fail(
-            EDiagnosticsCode.TypeMustBeInterfaceOrClass,
+    public void Target_type_can_be_record()
+        => GeneratorTest.ExpectOutput(
             // language=csharp
             """
-            public record PickSource
-            {
-                public string Name { get; set; }
-            }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
-            public partial record PickTarget { }
-            """);
+            public record PickSource(string Name, bool IsSample);
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
+            public partial record PickTarget;
+            """,
+            // language=csharp
+            "public partial record PickTarget(System.String Name, System.Boolean IsSample);");
 
     [Fact]
     public void Targeting_a_nested_type_is_possible()

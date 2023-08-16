@@ -7,6 +7,7 @@ namespace TypeSharper.Model.Member;
 public record TsPropAccessor(TsPropAccessor.EKind Kind, ETsVisibility Visibility)
 {
     public static TsPropAccessor PublicGet() => new(EKind.Get, ETsVisibility.Public);
+    public static TsPropAccessor PublicInit() => new(EKind.Init, ETsVisibility.Public);
 
     public string Cs()
         => Visibility.Cs(ETsVisibility.Public).MarginRight()

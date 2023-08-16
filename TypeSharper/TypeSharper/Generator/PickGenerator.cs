@@ -20,9 +20,20 @@ public class PickGenerator : MemberSelectionTypeGenerator
         TsType targetType,
         TsAttr attr)
         => model.AddType(
-            targetType
-                .NewPartial()
-                .AddProps(selectedPropertyNames.Select(propertyName => fromTypePropertyLookup[propertyName])));
+            targetType.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct
+                ? targetType
+                  .NewPartial()
+                  .SetPrimaryCtor(
+                      new TsPrimaryCtor(
+                          selectedPropertyNames.Select(
+                              propertyName =>
+                              {
+                                  var prop = fromTypePropertyLookup[propertyName];
+                                  return new TsParam(prop.Type, prop.Id, false);
+                              })))
+                : targetType
+                  .NewPartial()
+                  .AddProps(selectedPropertyNames.Select(propertyName => fromTypePropertyLookup[propertyName])));
 
     #endregion
 }

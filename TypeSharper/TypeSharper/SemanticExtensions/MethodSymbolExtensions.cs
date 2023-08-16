@@ -38,4 +38,7 @@ public static class MethodSymbolExtensions
             methodSymbol.Parameters.ToParams(),
             methodSymbol.ToMemberMods(),
             methodSymbol.CsBody());
+
+    public static TsPrimaryCtor ToPrimaryCtor(this IMethodSymbol methodSymbol)
+        => new(methodSymbol.Parameters.ToParams());
 }
