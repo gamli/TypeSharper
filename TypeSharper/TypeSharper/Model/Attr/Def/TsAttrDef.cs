@@ -49,8 +49,7 @@ public record TsAttrDef(
 
     public override string ToString() => Cs();
 
-
-    public TsTypeRef TypeRef() => new(TsNs.Qualified(TsAttr.ATTRIBUTE_NAMESPACE_ID), new TsQualifiedId(Id));
+    public TsTypeRef TypeRef() => TsTypeRef.WithNs(TsAttr.ATTRIBUTE_NAMESPACE_ID, Id);
 
     #region Equality Members
 

@@ -74,26 +74,26 @@ public class IntersectionGenerator : TypeGenerator
         return ConstituentTypes(attr)
             .Select(
                 type => new TsMethod(
-                    new TsId(type.Id.Cs().Replace(".", "_")),
+                    new TsId(type.Cs().Replace(".", "_")),
                     targetType.Ref(),
+                    new TsList<TsTypeRef>(),
                     new TsList<TsParam>(new TsParam(type, new TsId("valueToCast"), false)),
                     new TsMemberMods(
                         ETsVisibility.Public,
                         new TsAbstractMod(false),
                         new TsStaticMod(true),
                         ETsOperator.Implicit),
-                    Maybe.Some(
-                        targetType.PrimaryCtor.Match(
-                            ctor =>
-                                $"=> new ({props.Select(prop => prop.CsGetFrom("valueToCast")).JoinList()});"
-                                    .Indent(),
-                            () =>
-                                $$"""
-                                    => new {{targetType.Id.Cs()}}
-                                    {
-                                    {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToCast"))).JoinList()}}
-                                    };
-                                    """.Indent()))));
+                    targetType.PrimaryCtor.Match(
+                        _ =>
+                            $"=> new ({props.Select(prop => prop.CsGetFrom("valueToCast")).JoinList()});"
+                                .Indent(),
+                        () =>
+                            $$"""
+                                => new {{targetType.Id.Cs()}}
+                                {
+                                {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToCast"))).JoinList()}}
+                                };
+                                """.Indent())));
     }
 
     private static IEnumerable<TsCtor> GenerateCtors(
@@ -104,25 +104,24 @@ public class IntersectionGenerator : TypeGenerator
             .Select(
                 typeRef =>
                 {
-                    return (TsCtor)new TsCtor(
+                    return new TsCtor(
                         new TsList<TsParam>(new TsParam(typeRef, new TsId("valueToConvert"), false)),
                         new TsMemberMods(
                             ETsVisibility.Public,
                             new TsAbstractMod(false),
                             new TsStaticMod(false),
                             ETsOperator.None),
-                        Maybe.Some(
-                            targetType
-                                .PrimaryCtor
-                                .Match(
-                                    _ =>
-                                        $": this({props.Select(prop => prop.CsGetFrom("valueToConvert")).JoinList()}) {{ }}",
-                                    () =>
-                                        $$"""
-                                        {
-                                        {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToConvert")) + ";").JoinLines()}}
-                                        }
-                                        """)));
+                        targetType
+                            .PrimaryCtor
+                            .Match(
+                                _ =>
+                                    $": this({props.Select(prop => prop.CsGetFrom("valueToConvert")).JoinList()}) {{ }}",
+                                () =>
+                                    $$"""
+                                    {
+                                    {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToConvert")) + ";").JoinLines()}}
+                                    }
+                                    """));
                 });
 
 

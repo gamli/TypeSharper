@@ -15,7 +15,7 @@ public static class MethodSymbolExtensions
             ?.Body
             ?.GetText()
             .ToString();
-        return csBody == null ? Maybe.None<string>() : Maybe.Some(csBody);
+        return csBody == null ? Maybe<string>.NONE : csBody;
     }
 
     public static TsCtor ToCtor(this IMethodSymbol methodSymbol)
@@ -35,6 +35,7 @@ public static class MethodSymbolExtensions
         => new(
             methodSymbol.ToId(),
             methodSymbol.ReturnType.ToTypeRef(),
+            TsList.Create(methodSymbol.TypeParameters.Select(typeParam => typeParam.ToTypeRef())),
             methodSymbol.Parameters.ToParams(),
             methodSymbol.ToMemberMods(),
             methodSymbol.CsBody());

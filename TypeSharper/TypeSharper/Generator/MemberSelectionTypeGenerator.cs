@@ -22,11 +22,8 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
                 new TsAttrOverloadDef(
                     TsList.Create(
                         new TsParam(
-                            new TsTypeRef(
-                                TsNs.Qualified(new TsQualifiedId("System")),
-                                new TsQualifiedId("String"),
-                                true),
-                            new TsId("memberNames"),
+                            TsTypeRef.WithNsArray("System", "String"),
+                            "memberNames",
                             true)),
                     TsList<TsParam>.Empty,
                     TsList.Create(new TsId("TFromType")))));

@@ -2,6 +2,7 @@ namespace TypeSharper.Model.Identifier;
 
 public record TsId(string Value)
 {
+    public static implicit operator TsId(string value) => new(value);
     public TsId Capitalize() => new(Cs().Capitalize());
 
     public string Cs() => Value;

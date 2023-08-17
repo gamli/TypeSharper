@@ -30,18 +30,13 @@ public class TaggedUnionGenerator : TypeGenerator
                                         .Select(
                                             parameterIdx =>
                                                 new TsParam(
-                                                    new TsTypeRef(
-                                                        TsNs.Qualified(new TsQualifiedId("System")),
-                                                        new TsQualifiedId("String")),
-                                                    new TsId($"caseName_{parameterIdx}"),
+                                                    TsTypeRef.WithNs("System", "String"),
+                                                    $"caseName_{parameterIdx}",
                                                     false))
                                         .Append(
                                             new TsParam(
-                                                new TsTypeRef(
-                                                    TsNs.Qualified(new TsQualifiedId("System")),
-                                                    new TsQualifiedId("String"),
-                                                    true),
-                                                new TsId("additionalSimpleCases"),
+                                                TsTypeRef.WithNsArray("System", "String"),
+                                                "additionalSimpleCases",
                                                 true))),
                                 TsList.Create<TsParam>(),
                                 TsList.Create(
@@ -70,11 +65,17 @@ public class TaggedUnionGenerator : TypeGenerator
                     new TsAbstractMod(false),
                     new TsStaticMod(false),
                     ETsOperator.None),
-                Maybe.Some("{ }"));
+                "{ }");
 
         var factoryMethods = caseInfos.Select(FactoryMethod);
 
-        var matchMethod = MatchMethod(caseInfos);
+        var matchMethods = new[]
+        {
+            CsMatchMethod(caseInfos, Maybe<TsTypeRef>.NONE),
+            CsMatchMethod(
+                caseInfos,
+                Maybe<TsTypeRef>.Some(TsTypeRef.WithoutNs("TResult"))),
+        };
 
         var caseTypes = caseInfos.Select(CaseType);
 
@@ -84,7 +85,7 @@ public class TaggedUnionGenerator : TypeGenerator
                        .NewPartial()
                        .AddCtor(ctor)
                        .AddMethods(factoryMethods)
-                       .AddMethod(matchMethod))
+                       .AddMethods(matchMethods))
                .Aggregate(model, (generatedModel, type) => generatedModel.AddType(type));
     }
 
@@ -100,8 +101,8 @@ public class TaggedUnionGenerator : TypeGenerator
                 .Zip(
                     attr
                         .TypeArgs
-                        .Select(Maybe.Some)
-                        .Concat(Maybe.None<TsTypeRef>().Repeat()),
+                        .Select(Maybe<TsTypeRef>.Some)
+                        .Concat(Maybe<TsTypeRef>.NONE.Repeat()),
                     (caseName, caseType) =>
                         new CaseInfo(
                             new TsId(caseName.AssertPrimitive()),
@@ -114,7 +115,7 @@ public class TaggedUnionGenerator : TypeGenerator
                         .AssertArray()
                         .Select(
                             caseWithoutValueName =>
-                                new CaseInfo(new TsId(caseWithoutValueName), Maybe.None<TsTypeRef>(), targetType))));
+                                new CaseInfo(new TsId(caseWithoutValueName), Maybe<TsTypeRef>.NONE, targetType))));
 
     private static TsType CaseType(CaseInfo caseInfo)
     {
@@ -129,8 +130,8 @@ public class TaggedUnionGenerator : TypeGenerator
         var caseType =
             new TsType(
                 caseInfo.CaseName,
-                Maybe.Some(caseInfo.TargetType.Ref()),
-                Maybe.Some(caseInfo.TargetType.Ref()),
+                caseInfo.TargetType.Ref(),
+                caseInfo.TargetType.Ref(),
                 caseInfo.TargetType.Ns,
                 caseInfo.TargetType.TypeKind,
                 caseTypeMods);
@@ -148,7 +149,7 @@ public class TaggedUnionGenerator : TypeGenerator
                                     new TsAbstractMod(false),
                                     new TsStaticMod(false),
                                     ETsOperator.None),
-                                Maybe.Some("    => Value = value;")))
+                                "    => Value = value;"))
                         .AddProp(
                             new TsProp(
                                 innerCaseType,
@@ -163,6 +164,89 @@ public class TaggedUnionGenerator : TypeGenerator
 
         return caseType;
     }
+
+    private static string CsMatchBody(
+        TsList<CaseInfo> caseNamesAndTypes,
+        Maybe<TsTypeRef> maybeReturnType)
+    {
+        var matchCases =
+            caseNamesAndTypes
+                .Select(
+                    t =>
+                        t.CaseType.Match(
+                            _ =>
+                                maybeReturnType.Match(
+                                    _ => $$"""
+                                        {{t.CaseName.Cs()}} c => handle{{t.CaseName.Capitalize().Cs()}}(c.Value),
+                                        """,
+                                    () => $$"""
+                                        case {{t.CaseName.Cs()}} c:
+                                            handle{{t.CaseName.Capitalize().Cs()}}(c.Value);
+                                            break;
+                                        """),
+                            () =>
+                                maybeReturnType.Match(
+                                    _ => $$"""
+                                        {{t.CaseName.Cs()}} c => handle{{t.CaseName.Capitalize().Cs()}}(),
+                                        """,
+                                    () => $$"""
+                                        case {{t.CaseName.Cs()}}:
+                                            handle{{t.CaseName.Capitalize().Cs()}}();
+                                            break;
+                                        """)))
+                .JoinLines();
+        return maybeReturnType.Match(
+            _ => $$"""
+                => this switch
+                   {
+                {{matchCases.Indent(3).Indent()}}
+                   };
+                """,
+            () => $$"""
+                {
+                    switch(this)
+                    {
+                {{matchCases.Indent().Indent()}}
+                    }
+                }
+                """);
+    }
+
+    private static TsMethod CsMatchMethod(TsList<CaseInfo> caseNamesAndTypes, Maybe<TsTypeRef> maybeReturnType)
+        => new(
+            new TsId("Match"),
+            maybeReturnType.Match(
+                returnType => returnType,
+                () => TsTypeRef.WithoutNs("void")),
+            maybeReturnType.Match(returnType => TsList.Create(returnType), () => new TsList<TsTypeRef>()),
+            CsMatchParameters(caseNamesAndTypes, maybeReturnType),
+            new TsMemberMods(
+                ETsVisibility.Public,
+                new TsAbstractMod(false),
+                new TsStaticMod(false),
+                ETsOperator.None),
+            CsMatchBody(caseNamesAndTypes, maybeReturnType));
+
+    private static TsList<TsParam> CsMatchParameters(
+        TsList<CaseInfo> caseNamesAndTypes,
+        Maybe<TsTypeRef> maybeReturnType)
+        => TsList.Create<TsParam>(
+            caseNamesAndTypes.Select<TsParam>(
+                t
+                    => new TsParam(
+                        TsTypeRef.WithNs(
+                            "System",
+                            t.CaseType.Match(
+                                caseType
+                                    => maybeReturnType.Match(
+                                        returnType => $"Func<{caseType.Cs()}, {returnType.Cs()}>",
+                                        () => $"Action<{caseType.Cs()}>"),
+                                ()
+                                    => maybeReturnType.Match(
+                                        returnType => $"Func<{returnType.Cs()}>",
+                                        () => "Action"))),
+                        $"handle{t.CaseName.Capitalize().Cs()}",
+                        false)));
 
     private static TsMethod FactoryMethod(CaseInfo caseInfo)
     {
@@ -179,72 +263,17 @@ public class TaggedUnionGenerator : TypeGenerator
                 new TsMethod(
                     name,
                     returnType,
+                    new TsList<TsTypeRef>(),
                     TsList.Create(new TsParam(caseType, new TsId("value"), false)),
                     mods,
-                    Maybe.Some($"    => new {caseInfo.CaseName.Cs()}(value);")),
+                    $"    => new {caseInfo.CaseName.Cs()}(value);"),
             () => new TsMethod(
                 name,
                 returnType,
+                new TsList<TsTypeRef>(),
                 TsList.Create<TsParam>(),
                 mods,
-                Maybe.Some($"    => new {caseInfo.CaseName.Cs()}();")));
-    }
-
-    private static TsMethod MatchMethod(TsList<CaseInfo> caseNamesAndTypes)
-    {
-        var name = new TsId("Match");
-
-        var returnType = new TsTypeRef(TsNs.Global, new TsQualifiedId("void"));
-
-        var parameters =
-            TsList.Create<TsParam>(
-                caseNamesAndTypes.Select<TsParam>(
-                    t
-                        => new TsParam(
-                            new TsTypeRef(
-                                TsNs.Qualified(new TsQualifiedId("System")),
-                                new TsQualifiedId(
-                                    t.CaseType.Match(
-                                        caseType => $"Action<{caseType.Cs()}>",
-                                        () => "Action"))),
-                            new TsId($"handle{t.CaseName.Capitalize().Cs()}"),
-                            false)));
-
-        var matchCases =
-            caseNamesAndTypes
-                .Select(
-                    t =>
-                        t.CaseType.Match(
-                            _ => $$"""
-                                case {{t.CaseName.Cs()}} c:
-                                    handle{{t.CaseName.Capitalize().Cs()}}(c.Value);
-                                    break;
-                                """,
-                            () => $$"""
-                                case {{t.CaseName.Cs()}}:
-                                    handle{{t.CaseName.Capitalize().Cs()}}();
-                                    break;
-                                """))
-                .JoinLines();
-
-        var mods = new TsMemberMods(
-            ETsVisibility.Public,
-            new TsAbstractMod(false),
-            new TsStaticMod(false),
-            ETsOperator.None);
-
-        var bodySrc =
-            Maybe.Some(
-                $$"""
-                {
-                    switch(this)
-                    {
-                {{matchCases.Indent().Indent()}}
-                    }
-                }
-                """);
-
-        return new TsMethod(name, returnType, parameters, mods, bodySrc);
+                $"    => new {caseInfo.CaseName.Cs()}();"));
     }
 
     #endregion

@@ -15,13 +15,13 @@ public static class NamedTypeSymbolExtensions
 {
     public static Maybe<TsTypeRef> BaseType(this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.BaseType == null
-            ? Maybe.None<TsTypeRef>()
-            : Maybe.Some(namedTypeSymbol.BaseType.ToTypeRef());
+            ? Maybe<TsTypeRef>.NONE
+            : namedTypeSymbol.BaseType.ToTypeRef();
 
     public static Maybe<TsTypeRef> ContainingType(this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.ContainingType == null
-            ? Maybe.None<TsTypeRef>()
-            : Maybe.Some(namedTypeSymbol.ContainingType.ToTypeRef());
+            ? Maybe<TsTypeRef>.NONE
+            : namedTypeSymbol.ContainingType.ToTypeRef();
 
     public static IEnumerable<ITypeSymbol> ContainingTypeHierarchy(this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.ContainingType == null
@@ -41,8 +41,8 @@ public static class NamedTypeSymbolExtensions
         {
             return new TsType(
                 name,
-                Maybe.None<TsTypeRef>(),
-                Maybe.None<TsTypeRef>(),
+                Maybe<TsTypeRef>.NONE,
+                Maybe<TsTypeRef>.NONE,
                 namedTypeSymbol.ContainingNamespace.ToNs(),
                 TsType.EKind.Special,
                 new TsTypeMods(
@@ -83,7 +83,7 @@ public static class NamedTypeSymbolExtensions
             namedTypeSymbol.ContainingNamespace.ToNs(),
             typeKind,
             namedTypeSymbol.ToTypeMods(),
-            primaryCtor == null ? Maybe.None<TsPrimaryCtor>() : Maybe.Some(primaryCtor),
+            primaryCtor == null ? Maybe<TsPrimaryCtor>.NONE : primaryCtor,
             TsList.Create(
                 namedTypeSymbol
                     .InstanceConstructors
@@ -119,13 +119,15 @@ public static class NamedTypeSymbolExtensions
             new TsTargetTypeMod(namedTypeSymbol.TsAttributes().Any()));
 
     public static TsTypeRef ToTypeRef(this INamedTypeSymbol namedTypeSymbol)
-        => new(
-            namedTypeSymbol.ContainingNamespace.ToNs(),
-            new TsQualifiedId(
-                TsList.Create(
-                    namedTypeSymbol
-                        .ContainingTypeHierarchy()
-                        .Select(ts => ts.ToId())
-                        .Reverse()
-                        .Append(namedTypeSymbol.ToId()))));
+    {
+        var idParts =
+            TsList.Create(
+                namedTypeSymbol
+                    .ContainingTypeHierarchy()
+                    .Select(ts => ts.ToId())
+                    .Reverse()
+                    .Append(namedTypeSymbol.ToId()));
+
+        return TsTypeRef.WithNs(namedTypeSymbol.ContainingNamespace.ToNsRef(), new TsQualifiedId(idParts));
+    }
 }

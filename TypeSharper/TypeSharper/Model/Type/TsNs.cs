@@ -1,74 +1,36 @@
 using System;
+using System.Linq;
 using TypeSharper.Model.Identifier;
 
 namespace TypeSharper.Model.Type;
 
 public record TsNs
 {
-    public static TsNs Global { get; } = new GlobalCase();
+    public TsNs(string csNs) : this(new TsQualifiedId(csNs)) { }
 
-    public static TsNs Qualified(TsQualifiedId id) => new QualifiedCase(id);
-
-    public string Cs() => Match(id => $"namespace {id.Cs()};", () => "");
-
-    public T Match<T>(Func<TsQualifiedId, T> ifQualified, Func<T> ifGlobal)
-        => this switch
-        {
-            QualifiedCase qualifiedCase => ifQualified(qualifiedCase.Id),
-            GlobalCase                  => ifGlobal(),
-            _                           => throw new ArgumentOutOfRangeException(),
-        };
-
-    public override string ToString() => Cs();
-
-    #region Private
-
-    private TsNs() { }
-
-    #endregion
-
-    #region Nested types
-
-    private record GlobalCase : TsNs
+    public TsNs(TsQualifiedId id)
     {
-        #region Equality Members
-
-        public virtual bool Equals(GlobalCase? other) => other == this;
-        public override int GetHashCode() => 10239578;
-
-        #endregion
-    }
-
-    private record QualifiedCase(TsQualifiedId Id) : TsNs
-    {
-        #region Equality Members
-
-        public virtual bool Equals(QualifiedCase? other)
+        if (id.Parts.Any(part => part.Cs() == "::global"))
         {
-            if (ReferenceEquals(null, other))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, other))
-            {
-                return true;
-            }
-
-            return base.Equals(other)
-                   && Id.Equals(other.Id);
+            throw new ArgumentOutOfRangeException(nameof(Id), "::global should never be passed as ID");
         }
 
-        public override int GetHashCode()
+        if (id.Parts.Any(part => string.IsNullOrEmpty(part.Cs())))
         {
-            unchecked
-            {
-                return (base.GetHashCode() * 397) ^ Id.GetHashCode();
-            }
+            throw new ArgumentOutOfRangeException(nameof(Id), "namespace part should never be empty");
         }
 
-        #endregion
+        Id = id;
     }
 
-    #endregion
+    public TsQualifiedId Id { get; init; }
+
+    public bool IsGlobal => !Id.Parts.Any() || Id.Parts.First() == "::global";
+    public static implicit operator TsNs(string csNs) => new(csNs);
+    public TsNs Add(TsId id) => new(Id.Add(id));
+
+    public string CsFileScoped() => IsGlobal ? "" : $"namespace {Id.Cs()};";
+    public string CsRef() => IsGlobal ? "" : Id.Cs();
+
+    public override string ToString() => CsFileScoped();
 }

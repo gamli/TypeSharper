@@ -34,7 +34,7 @@ public record TsType(
             Ns,
             TypeKind,
             Mods,
-            Maybe.None<TsPrimaryCtor>(),
+            Maybe<TsPrimaryCtor>.NONE,
             TsList<TsCtor>.Empty,
             TsList<TsProp>.Empty,
             TsList<TsMethod>.Empty,
@@ -93,18 +93,23 @@ public record TsType(
     public TsType NewPartial()
         => this with
         {
-            BaseType = Maybe.None<TsTypeRef>(),
+            BaseType = Maybe<TsTypeRef>.NONE,
             Ctors = TsList<TsCtor>.Empty,
             Props = TsList<TsProp>.Empty,
             Methods = TsList<TsMethod>.Empty,
             Attrs = TsList<TsAttr>.Empty,
         };
 
-    public TsTypeRef Ref() => new(Ns, ContainingType.Match(typeRef => typeRef.Id.Add(Id), () => new TsQualifiedId(Id)));
-    public TsType RemovePrimaryCtor() => this with { PrimaryCtor = Maybe.None<TsPrimaryCtor>() };
+    public TsTypeRef Ref()
+        => ContainingType.Match(
+            typeRef => typeRef.AddId(Id),
+            () => TsTypeRef.WithNs(Ns.Id, Id));
 
-    public TsType SetPrimaryCtor(TsPrimaryCtor primaryCtor) => SetPrimaryCtor(Maybe.Some(primaryCtor));
-    public TsType SetPrimaryCtor(Maybe<TsPrimaryCtor> primaryCtor) => this with { PrimaryCtor = primaryCtor };
+    public TsType RemovePrimaryCtor() => this with { PrimaryCtor = Maybe<TsPrimaryCtor>.NONE };
+    public TsType SetPrimaryCtor(TsPrimaryCtor primaryCtor) => this with { PrimaryCtor = primaryCtor };
+
+    public TsType SetPrimaryCtor(Maybe<TsPrimaryCtor> primaryCtor)
+        => primaryCtor.Match(SetPrimaryCtor, RemovePrimaryCtor);
 
     #region Private
 
@@ -164,7 +169,7 @@ public record TsType(
     private IEnumerable<string> CsNestedTypes(TsModel model)
         => model.NestedTypes(this).Select(nestedType => nestedType.Cs(model));
 
-    private string CsNs() => ContainingType.Match(_ => "", () => Ns.Cs().AddRightIfNotEmpty("\n\n"));
+    private string CsNs() => ContainingType.Match(_ => "", () => Ns.CsFileScoped().AddRightIfNotEmpty("\n\n"));
 
     private Maybe<string> CsPrimaryCtor() => PrimaryCtor.IfSome(ctor => ctor.Cs());
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using TypeSharper.Model.Modifier;
 using TypeSharper.Model.Type;
 using TypeSharper.SyntaxExtensions;
 
@@ -28,7 +29,8 @@ public static class TypeSymbolExtensions
     public static TsTypeRef ToTypeRef(this ITypeSymbol typeSymbol)
         => typeSymbol switch
         {
-            IArrayTypeSymbol arrayTypeSymbol => arrayTypeSymbol.ElementType.ToTypeRef() with { IsArray = true },
+            IArrayTypeSymbol arrayTypeSymbol
+                => arrayTypeSymbol.ElementType.ToTypeRef().WithArrayMod(new TsArrayMod(true)),
             IDynamicTypeSymbol dynamicTypeSymbol => throw new NotImplementedException(),
             IErrorTypeSymbol errorTypeSymbol => throw new NotImplementedException(),
             IFunctionPointerTypeSymbol functionPointerTypeSymbol => throw new NotImplementedException(),

@@ -54,10 +54,10 @@ public class TypeSharperGenerator : IIncrementalGenerator
                                         var filePath =
                                             newType
                                                 .Ref()
-                                                .Ns
-                                                .Match(
-                                                    qualified => qualified.Parts.Select(p => p.Value).JoinString("/"),
-                                                    () => "")
+                                                .Id
+                                                .Parts
+                                                .Select(id => id.Cs())
+                                                .JoinString("/")
                                                 .AddRightIfNotEmpty("/");
 
                                         return (tree: syntaxTree, filePath: $"{filePath}{newType.Id.Value}.g");
@@ -100,11 +100,11 @@ public class TypeSharperGenerator : IIncrementalGenerator
                     .Aggregate(
                         TsModel.New(),
                         (current, typeSymbol) => current.AddType(typeSymbol.ToType())),
-                Maybe.None<INamedTypeSymbol>());
+                Maybe<INamedTypeSymbol>.NONE);
         }
         catch (TsModelCreationSymbolErrorException e)
         {
-            return (new TsModel(new TsDict<TsTypeRef, TsType>()), Maybe.Some(e.Symbol));
+            return (new TsModel(new TsDict<TsTypeRef, TsType>()), Maybe<INamedTypeSymbol>.Some(e.Symbol));
         }
     }
 
@@ -226,7 +226,7 @@ public class TypeSharperGenerator : IIncrementalGenerator
 
             if (!typeGenerator.RunDiagnostics(sourceProductionContext, generatedModel, targetType, targetAttr))
             {
-                return Maybe.None<TsModel>();
+                return Maybe<TsModel>.NONE;
             }
 
             try
@@ -236,11 +236,11 @@ public class TypeSharperGenerator : IIncrementalGenerator
             catch (TsGeneratorException e)
             {
                 e.Code.ReportError(sourceProductionContext, e.FmtMsg, e.FmtArgs);
-                return Maybe.None<TsModel>();
+                return Maybe<TsModel>.NONE;
             }
         }
 
-        return Maybe.Some(generatedModel);
+        return generatedModel;
     }
 
     #endregion
