@@ -40,7 +40,7 @@ public record TsType(
             TsList<TsMethod>.Empty,
             TsList<TsAttr>.Empty) { }
 
-
+    public bool SupportsPrimaryCtor => TypeKind is EKind.RecordClass or EKind.RecordStruct;
     public TsType AddAttr(TsAttr attr) => AddAttrs(attr);
     public TsType AddAttrs(params TsAttr[] attrs) => AddAttrs((IEnumerable<TsAttr>)attrs);
     public TsType AddAttrs(IEnumerable<TsAttr> attrs) => this with { Attrs = Attrs.AddRange(attrs) };
@@ -71,6 +71,12 @@ public record TsType(
     public TsType AddProp(TsProp prop) => AddProps(prop);
     public TsType AddProps(params TsProp[] props) => AddProps((IEnumerable<TsProp>)props);
     public TsType AddProps(IEnumerable<TsProp> props) => this with { Props = Props.AddRange(props) };
+
+    public TsType AddPublicCtor(Maybe<string> csBody, params TsParam[] parameters)
+        => AddPublicCtor(csBody, (IEnumerable<TsParam>)parameters);
+
+    public TsType AddPublicCtor(Maybe<string> csBody, IEnumerable<TsParam> parameters)
+        => AddCtor(TsCtor.Public(csBody, parameters));
 
     public string Cs(TsModel model) => $"{CsNs()}{CsAttrs().AddRightIfNotEmpty("\n")}{CsSignature()}{CsBody(model)}";
 
@@ -106,10 +112,18 @@ public record TsType(
             () => TsTypeRef.WithNs(Ns.Id, Id));
 
     public TsType RemovePrimaryCtor() => this with { PrimaryCtor = Maybe<TsPrimaryCtor>.NONE };
+
+    public TsType SetPrimaryCtor(params TsParam[] parameters) => SetPrimaryCtor((IEnumerable<TsParam>)parameters);
+
+    public TsType SetPrimaryCtor(IEnumerable<TsParam> parameters)
+        => SetPrimaryCtor(new TsPrimaryCtor(TsList.Create(parameters)));
+
     public TsType SetPrimaryCtor(TsPrimaryCtor primaryCtor) => this with { PrimaryCtor = primaryCtor };
 
     public TsType SetPrimaryCtor(Maybe<TsPrimaryCtor> primaryCtor)
         => primaryCtor.Match(SetPrimaryCtor, RemovePrimaryCtor);
+
+    public TsParam ToParam(TsId paramId, bool isParams = false) => new(Ref(), paramId, isParams);
 
     #region Private
 

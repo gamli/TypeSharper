@@ -13,7 +13,7 @@ public class OmitGenerator : MemberSelectionTypeGenerator
 
     protected override TsId AttributeId() => new("TypeSharperOmitAttribute");
 
-    protected override TsModel DoGenerate(
+    protected override TsType DoGenerate(
         TsModel model,
         TsType fromType,
         TsDict<TsId, TsProp> fromTypePropertyLookup,
@@ -22,24 +22,23 @@ public class OmitGenerator : MemberSelectionTypeGenerator
         TsAttr attr)
     {
         var selectedMemberNamesSet = new HashSet<TsId>(selectedPropertyNames);
-        return model.AddType(
-            targetType.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct
-                ? targetType
-                  .NewPartial()
-                  .SetPrimaryCtor(
-                      new TsPrimaryCtor(
-                          fromType
-                              .Props
-                              .Where(m => !selectedMemberNamesSet.Contains(m.Id))
-                              .Select(
-                                  propertyName =>
-                                  {
-                                      var prop = fromTypePropertyLookup[propertyName.Id];
-                                      return new TsParam(prop.Type, prop.Id, false);
-                                  })))
-                : targetType
-                  .NewPartial()
-                  .AddProps(fromType.Props.Where(m => !selectedMemberNamesSet.Contains(m.Id))));
+        return targetType.SupportsPrimaryCtor
+            ? targetType
+              .NewPartial()
+              .SetPrimaryCtor(
+                  new TsPrimaryCtor(
+                      fromType
+                          .Props
+                          .Where(m => !selectedMemberNamesSet.Contains(m.Id))
+                          .Select(
+                              propertyName =>
+                              {
+                                  var prop = fromTypePropertyLookup[propertyName.Id];
+                                  return new TsParam(prop.Type, prop.Id, false);
+                              })))
+            : targetType
+              .NewPartial()
+              .AddProps(fromType.Props.Where(m => !selectedMemberNamesSet.Contains(m.Id)));
     }
 
     #endregion

@@ -11,6 +11,7 @@ public static class IntersectionSample
 {
     public static ShapeIntersection Circle(Circle circle) => new(circle);
 
+    public static void Ctor() => PrintShapeType(new ShapeIntersection(new Circle(EShapeType.Circle, 1, 2, 10)));
     public static void ImplicitCast() => PrintShapeType(new Circle(EShapeType.Circle, 1, 2, 10));
 
     public static void PrintShapeType(ShapeIntersection shapeIntersection)

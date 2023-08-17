@@ -42,7 +42,7 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
 
     protected abstract TsId AttributeId();
 
-    protected abstract TsModel DoGenerate(
+    protected abstract TsType DoGenerate(
         TsModel model,
         TsType fromType,
         TsDict<TsId, TsProp> fromTypePropertyLookup,
@@ -54,22 +54,64 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
     {
         var fromType = FromType(attr, model);
 
-        var fromTypePropertyLookup = FromTypePropertyLookup(fromType);
+        var fromTypePropDict = FromTypePropertyLookup(fromType);
 
-        var selectedPropertyNames = SelectedPropertyNames(attr);
+        var propNames = SelectedPropertyNames(attr);
 
-        return DoGenerate(
+        var generatedType = DoGenerate(
             model,
             fromType,
-            fromTypePropertyLookup,
-            selectedPropertyNames,
+            fromTypePropDict,
+            propNames,
             targetType,
             attr);
+
+        return model.AddType(
+            generatedType switch
+            {
+                { SupportsPrimaryCtor: true }
+                    => generatedType.AddPublicCtor(
+                        CsFromTypePrimaryCtor(propNames, fromTypePropDict),
+                        fromType.ToParam("fromValue")),
+                { TypeKind: not TsType.EKind.Interface } and { Mods.Abstract.IsSet: false }
+                    => generatedType.AddPublicCtor(
+                        CsFromTypeCtor(propNames, fromTypePropDict),
+                        fromType.ToParam("fromValue")),
+                _ => generatedType,
+            });
     }
 
     #endregion
 
     #region Private
+
+    private static string CsFromTypeCtor(
+        TsList<TsId> selectedPropertyNames,
+        TsDict<TsId, TsProp> fromTypePropertyLookup)
+    {
+        var propertyAssignments = selectedPropertyNames.Select(
+            propId =>
+            {
+                var prop = fromTypePropertyLookup[propId];
+                return $"{prop.CsSet(prop.CsGetFrom("fromValue"))};";
+            });
+        return $$"""
+            {
+            {{propertyAssignments.Indent()}}
+            }
+            """;
+    }
+
+    private static string CsFromTypePrimaryCtor(
+        TsList<TsId> selectedPropertyNames,
+        TsDict<TsId, TsProp> fromTypePropertyLookup)
+    {
+        var csPrimaryCtorArgs =
+            selectedPropertyNames
+                .Select(propId => fromTypePropertyLookup[propId].CsGetFrom("fromValue"))
+                .JoinList();
+        return $": this({csPrimaryCtorArgs}) {{ }}";
+    }
 
     private static TsType FromType(TsAttr attr, TsModel model) => model.Resolve(attr.TypeArgs.Single());
 

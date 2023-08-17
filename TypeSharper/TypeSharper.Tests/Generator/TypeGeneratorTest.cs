@@ -77,6 +77,12 @@ public class TypeGeneratorTests
             """
             public partial class PickTarget
             {
+                public PickTarget(PickSource fromValue)
+                {
+                    Name = fromValue.Name;
+                    IsSample = fromValue.IsSample;
+                }
+                    
                 public System.String Name { get; set; }
                 public System.Boolean IsSample { get; set; }
             }
@@ -114,7 +120,7 @@ public class TypeGeneratorTests
             public partial record PickTarget;
             """,
             // language=csharp
-            "public partial record PickTarget(System.String Name, System.Boolean IsSample);");
+            "public partial record PickTarget(System.String Name, System.Boolean IsSample)");
 
     [Fact]
     public void Targeting_a_nested_type_is_possible()

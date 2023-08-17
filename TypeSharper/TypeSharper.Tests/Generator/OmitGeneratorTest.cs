@@ -8,6 +8,24 @@ namespace TypeSharper.Tests.Generator;
 public class OmitGeneratorTests
 {
     [Fact]
+    public void A_constructor_that_takes_the_from_type_as_argument_is_generated()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            public record OmitSource(string Name, bool IsSample, int Count);
+            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Count")]
+            public partial record OmitTarget;
+            """,
+            // language=csharp
+            """
+            public partial record OmitTarget(System.String Name, System.Boolean IsSample)
+            {
+                public OmitTarget(OmitSource fromValue)
+                : this(fromValue.Count) { }
+            }
+            """);
+
+    [Fact]
     public void Omit_a_single_property()
         => GeneratorTest.ExpectOutput(
             // language=csharp
@@ -22,13 +40,11 @@ public class OmitGeneratorTests
             public partial class OmitTarget { }
             """,
             // language=csharp
-            """
-            public partial class OmitTarget
-            {
-                public System.String Name { get; set; }
-                public System.Boolean IsSample { get; set; }
-            }
-            """);
+            "public partial class OmitTarget",
+            // language=csharp
+            "public System.String Name { get; set; }",
+            // language=csharp
+            "public System.Boolean IsSample { get; set; }");
 
     [Fact]
     public void Omit_multiple_properties()
@@ -45,27 +61,9 @@ public class OmitGeneratorTests
             public partial class OmitTarget { }
             """,
             // language=csharp
-            """
-            public partial class OmitTarget
-            {
-                public System.String Name { get; set; }
-            }
-            """);
-
-    [Fact]
-    public void Omitting_all_properties_generates_no_code()
-        => GeneratorTest.ExpectEmptyOutput(
+            "public partial class OmitTarget",
             // language=csharp
-            """
-            public class OmitSource
-            {
-                public string Name { get; set; }
-                public bool IsSample { get; set; }
-                public int Count { get; set; }
-            }
-            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Name", "IsSample", "Count")]
-            public partial class PickTarget { }
-            """);
+            "public System.String Name { get; set; }");
 
     [Fact]
     public void Omitting_non_existing_properties_is_an_error()

@@ -9,16 +9,16 @@ public abstract partial record ShapeTaggedUnion;
 
 public static class TaggedUnionSample
 {
+    public static double Area(ShapeTaggedUnion shape)
+        => shape.Match(
+            rect => rect.Width * rect.Height,
+            square => square.Size * square.Size,
+            circle => Math.PI * circle.Radius * circle.Radius);
+
     public static ShapeTaggedUnion CreateFourCorners(Rect rect) => ShapeTaggedUnion.CreateFourCorners(rect);
 
     public static ShapeTaggedUnion CreateFourCornersAndEqualEdges(Square square)
         => ShapeTaggedUnion.CreateFourCornersAndEqualEdges(square);
 
     public static ShapeTaggedUnion CreateRoundThing(Circle circle) => ShapeTaggedUnion.CreateRoundThing(circle);
-
-    public static double Area(ShapeTaggedUnion shape)
-        => shape.Match(
-            rect => rect.Width * rect.Height,
-            square => square.Size * square.Size,
-            circle => Math.PI * circle.Radius * circle.Radius);
 }

@@ -12,28 +12,27 @@ public class PickGenerator : MemberSelectionTypeGenerator
 
     protected override TsId AttributeId() => new("TypeSharperPickAttribute");
 
-    protected override TsModel DoGenerate(
+    protected override TsType DoGenerate(
         TsModel model,
         TsType fromType,
         TsDict<TsId, TsProp> fromTypePropertyLookup,
         TsList<TsId> selectedPropertyNames,
         TsType targetType,
         TsAttr attr)
-        => model.AddType(
-            targetType.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct
-                ? targetType
-                  .NewPartial()
-                  .SetPrimaryCtor(
-                      new TsPrimaryCtor(
-                          selectedPropertyNames.Select(
-                              propertyName =>
-                              {
-                                  var prop = fromTypePropertyLookup[propertyName];
-                                  return new TsParam(prop.Type, prop.Id, false);
-                              })))
-                : targetType
-                  .NewPartial()
-                  .AddProps(selectedPropertyNames.Select(propertyName => fromTypePropertyLookup[propertyName])));
+        => targetType.SupportsPrimaryCtor
+            ? targetType
+              .NewPartial()
+              .SetPrimaryCtor(
+                  new TsPrimaryCtor(
+                      selectedPropertyNames.Select(
+                          propertyName =>
+                          {
+                              var prop = fromTypePropertyLookup[propertyName];
+                              return new TsParam(prop.Type, prop.Id, false);
+                          })))
+            : targetType
+              .NewPartial()
+              .AddProps(selectedPropertyNames.Select(propertyName => fromTypePropertyLookup[propertyName]));
 
     #endregion
 }
