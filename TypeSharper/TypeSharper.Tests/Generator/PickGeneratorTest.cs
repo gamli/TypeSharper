@@ -19,10 +19,26 @@ public class PickGeneratorTests
             // language=csharp
             """
             public partial record PickTarget(System.Int32 Count)
-            {
-                public PickTarget(PickSource fromValue)
-                : this(fromValue.Count) { }
-            }
+            """,
+            // language=csharp
+            """
+            public PickTarget(PickSource fromValue)
+            : this(fromValue.Count) { }
+            """);
+
+    [Fact]
+    public void An_implicit_cast_operator_that_takes_the_from_type_as_argument_is_generated()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            public record PickSource(string Name, bool IsSample, int Count);
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Count")]
+            public partial record PickTarget;
+            """,
+            // language=csharp
+            """
+            public static implicit operator PickTarget(PickSource fromValue)
+                => new(fromValue);
             """);
 
     [Fact]

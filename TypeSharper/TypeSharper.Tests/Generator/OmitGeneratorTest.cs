@@ -19,10 +19,26 @@ public class OmitGeneratorTests
             // language=csharp
             """
             public partial record OmitTarget(System.String Name, System.Boolean IsSample)
-            {
-                public OmitTarget(OmitSource fromValue)
-                : this(fromValue.Count) { }
-            }
+            """,
+            // language=csharp
+            """
+            public OmitTarget(OmitSource fromValue)
+            : this(fromValue.Count) { }
+            """);
+
+    [Fact]
+    public void An_implicit_cast_operator_that_takes_the_from_type_as_argument_is_generated()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            public record OmitSource(string Name, bool IsSample, int Count);
+            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Count")]
+            public partial record OmitTarget;
+            """,
+            // language=csharp
+            """
+            public static implicit operator OmitTarget(OmitSource fromValue)
+                => new(fromValue);
             """);
 
     [Fact]

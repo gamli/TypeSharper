@@ -69,14 +69,18 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
         return model.AddType(
             generatedType switch
             {
-                { SupportsPrimaryCtor: true }
-                    => generatedType.AddPublicCtor(
-                        CsFromTypePrimaryCtor(propNames, fromTypePropDict),
-                        fromType.ToParam("fromValue")),
                 { TypeKind: not TsType.EKind.Interface } and { Mods.Abstract.IsSet: false }
-                    => generatedType.AddPublicCtor(
-                        CsFromTypeCtor(propNames, fromTypePropDict),
-                        fromType.ToParam("fromValue")),
+                    => generatedType
+                       .AddPublicCtor(
+                           generatedType switch
+                           {
+                               { SupportsPrimaryCtor: true } => CsFromTypePrimaryCtor(propNames, fromTypePropDict),
+                               _                             => CsFromTypeCtor(propNames, fromTypePropDict),
+                           },
+                           fromType.ToParam("fromValue"))
+                       .AddImplicitCastOperator(
+                           fromType.Ref(),
+                           param => $"=> new({param.CsRef()});".Indent()),
                 _ => generatedType,
             });
     }

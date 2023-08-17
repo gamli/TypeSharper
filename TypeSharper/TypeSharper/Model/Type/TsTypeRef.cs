@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using TypeSharper.Model.Identifier;
+using TypeSharper.Model.Member;
 using TypeSharper.Model.Modifier;
 
 namespace TypeSharper.Model.Type;
@@ -18,6 +19,8 @@ public record TsTypeRef
     public TsTypeRef AddId(TsId id) => this with { Id = Id.Add(id) };
 
     public string Cs() => Id.Cs() + ArrayMod.Cs();
+
+    public TsParam ToParam(TsId paramId, bool isParams = false) => new(this, paramId, isParams);
 
     public override string ToString() => Cs();
 

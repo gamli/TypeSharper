@@ -85,6 +85,8 @@ public class TypeGeneratorTests
                     
                 public System.String Name { get; set; }
                 public System.Boolean IsSample { get; set; }
+                public static implicit operator PickTarget(PickSource fromValue)
+                    => new(fromValue);
             }
             """);
 

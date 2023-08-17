@@ -4,6 +4,7 @@ using System.Linq;
 using TypeSharper.Model.Attr;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
+using TypeSharper.Model.Modifier;
 
 namespace TypeSharper.Model.Type;
 
@@ -45,9 +46,19 @@ public record TsType(
     public TsType AddAttrs(params TsAttr[] attrs) => AddAttrs((IEnumerable<TsAttr>)attrs);
     public TsType AddAttrs(IEnumerable<TsAttr> attrs) => this with { Attrs = Attrs.AddRange(attrs) };
 
+
+    public TsType AddCastOperator(TsTypeRef fromType, Func<TsParam, string> csBody, ETsOperator op)
+        => AddMethod(TsMethod.CastOperator(fromType, Ref(), csBody, op));
+
     public TsType AddCtor(TsCtor ctor) => AddCtors(ctor);
     public TsType AddCtors(params TsCtor[] ctors) => AddCtors((IEnumerable<TsCtor>)ctors);
     public TsType AddCtors(IEnumerable<TsCtor> ctors) => this with { Ctors = Ctors.AddRange(ctors) };
+
+    public TsType AddExplicitCastOperator(TsTypeRef fromType, Func<TsParam, string> csBody)
+        => AddMethod(TsMethod.ExplicitCastOperator(fromType, Ref(), csBody));
+
+    public TsType AddImplicitCastOperator(TsTypeRef fromType, Func<TsParam, string> csBody)
+        => AddMethod(TsMethod.ImplicitCastOperator(fromType, Ref(), csBody));
 
     public TsType AddMembers(
         IEnumerable<TsCtor> ctors,
@@ -61,7 +72,6 @@ public record TsType(
             Methods = Methods.AddRange(methods),
             Attrs = Attrs.AddRange(attrs),
         };
-
 
     public TsType AddMethod(TsMethod method) => AddMethods(method);
     public TsType AddMethods(params TsMethod[] methods) => AddMethods((IEnumerable<TsMethod>)methods);
@@ -123,7 +133,7 @@ public record TsType(
     public TsType SetPrimaryCtor(Maybe<TsPrimaryCtor> primaryCtor)
         => primaryCtor.Match(SetPrimaryCtor, RemovePrimaryCtor);
 
-    public TsParam ToParam(TsId paramId, bool isParams = false) => new(Ref(), paramId, isParams);
+    public TsParam ToParam(TsId paramId, bool isParams = false) => Ref().ToParam(paramId, isParams);
 
     #region Private
 

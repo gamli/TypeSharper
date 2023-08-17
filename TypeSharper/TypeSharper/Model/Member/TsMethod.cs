@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Modifier;
@@ -14,6 +15,25 @@ public record TsMethod(
         Maybe<string> CsBody)
     : TsMember(Mods)
 {
+    public static TsMethod CastOperator(
+        TsTypeRef fromType,
+        TsTypeRef toType,
+        Func<TsParam, string> csBody,
+        ETsOperator op)
+        => new(
+            new TsId(""),
+            toType,
+            new TsList<TsTypeRef>(),
+            TsList.Create(fromType.ToParam("fromValue")),
+            new TsMemberMods(ETsVisibility.Public, new TsAbstractMod(false), new TsStaticMod(true), op),
+            csBody(fromType.ToParam("fromValue")));
+
+    public static TsMethod ExplicitCastOperator(TsTypeRef fromType, TsTypeRef toType, Func<TsParam, string> csBody)
+        => CastOperator(fromType, toType, csBody, ETsOperator.Explicit);
+
+    public static TsMethod ImplicitCastOperator(TsTypeRef fromType, TsTypeRef toType, Func<TsParam, string> csBody)
+        => CastOperator(fromType, toType, csBody, ETsOperator.Implicit);
+
     public string Cs() => $"{CsSignature()}{CsBody.Match(csBody => $"\n{csBody}", () => ";")}";
 
     public override string ToString() => Cs();
