@@ -38,7 +38,7 @@ public class IntersectionGeneratorTests
             using TypeSharper.Attributes;
             {{typesToIntersect.JoinLines()}}
             [TypeSharperIntersection<{{typeNamesToIntersect.JoinList()}}>()]
-            public partial class IntersectionTarget { }
+            public partial record IntersectionTarget;
             """,
             typeNamesToIntersect
                 .Select(
@@ -46,16 +46,11 @@ public class IntersectionGeneratorTests
                         // language=csharp
                         $$"""
                         public IntersectionTarget({{typeName}} valueToConvert)
-                        {
-                            Prop10 = valueToConvert.Prop10;
-                        }
+                        : this(valueToConvert.Prop{{TYPE_COUNT}}) { }
                         """)
                 .Append(
                     // language=csharp
-                    $"public System.Int32 Prop{TYPE_COUNT} {{ get; set; }}")
-                .Append(
-                    // language=csharp
-                    "public partial class IntersectionTarget")
+                    $"public partial record IntersectionTarget(System.Int32 Prop{TYPE_COUNT})")
                 .ToArray());
     }
 
@@ -113,25 +108,17 @@ public class IntersectionGeneratorTests
                 public int C { get; set; }
             }
             [TypeSharperIntersection<Type1, Type2>()]
-            public partial class IntersectionTarget { }
+            public partial record IntersectionTarget { }
             """,
             // language=csharp
             """
             public static implicit operator IntersectionTarget(Type1 valueToCast)
-                => new IntersectionTarget
-                {
-                    A = valueToCast.A,
-                    C = valueToCast.C
-                };
+                => new (valueToCast.A, valueToCast.C);
             """,
             // language=csharp
             """
             public static implicit operator IntersectionTarget(Type2 valueToCast)
-                => new IntersectionTarget
-                {
-                    A = valueToCast.A,
-                    C = valueToCast.C
-                };
+                => new (valueToCast.A, valueToCast.C);
             """);
 
     [Fact]
@@ -152,23 +139,17 @@ public class IntersectionGeneratorTests
                 public int C { get; set; }
             }
             [TypeSharperIntersection<Type1, Type2>()]
-            public partial class IntersectionTarget { }
+            public partial record IntersectionTarget { }
             """,
             // language=csharp
             """
             public IntersectionTarget(Type1 valueToConvert)
-            {
-                A = valueToConvert.A;
-                C = valueToConvert.C;
-            }
+            : this(valueToConvert.A, valueToConvert.C) { }
             """,
             // language=csharp
             """
             public IntersectionTarget(Type2 valueToConvert)
-            {
-                A = valueToConvert.A;
-                C = valueToConvert.C;
-            }
+            : this(valueToConvert.A, valueToConvert.C) { }
             """);
 
     [Fact]
@@ -189,14 +170,10 @@ public class IntersectionGeneratorTests
                 public int C { get; set; }
             }
             [TypeSharperIntersection<Type1, Type2>()]
-            public partial class IntersectionTarget { }
+            public partial record IntersectionTarget { }
             """,
             // language=csharp
-            "public partial class IntersectionTarget",
-            // language=csharp
-            "public System.Int32 A { get; set; }",
-            // language=csharp
-            "public System.Int32 C { get; set; }");
+            "public partial record IntersectionTarget(System.Int32 A, System.Int32 C)");
 
     [Fact]
     public void Intersecting_two_types_with_no_properties_in_common_generates_empty_constructors()
@@ -213,20 +190,16 @@ public class IntersectionGeneratorTests
                 public int B { get; set; }
             }
             [TypeSharperIntersection<Type1, Type2>()]
-            public partial class IntersectionTarget { }
+            public partial record IntersectionTarget;
             """,
             // language=csharp
             """
             public IntersectionTarget(Type1 valueToConvert)
-            {
-                
-            }
+            { }
             """,
             // language=csharp
             """
             public IntersectionTarget(Type2 valueToConvert)
-            {
-                
-            }
+            { }
             """);
 }

@@ -147,7 +147,8 @@ public class TypeSharperGenerator : IIncrementalGenerator
 
         foreach (var (targetType, _) in targets)
         {
-            if (!Diag.RunTypeHierarchyIsPartialDiagnostics(sourceProductionContext, model, targetType))
+            if (!Diag.RunTypeHierarchyIsPartialDiagnostics(sourceProductionContext, model, targetType)
+                || !Diag.RunTypeIsRecordDiagnostics(sourceProductionContext, targetType))
             {
                 return false;
             }
@@ -164,7 +165,7 @@ public class TypeSharperGenerator : IIncrementalGenerator
            .SyntaxProvider
            .CreateSyntaxProvider(
                (s, _)
-                   => s is InterfaceDeclarationSyntax or ClassDeclarationSyntax or RecordDeclarationSyntax,
+                   => s is InterfaceDeclarationSyntax or ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax,
                (ctx, cancellationToken)
                    =>
                {

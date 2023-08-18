@@ -23,7 +23,7 @@ public class PickGenerator : MemberSelectionTypeGenerator
             ? targetType
               .NewPartial()
               .SetPrimaryCtor(
-                  new TsPrimaryCtor(
+                  TsPrimaryCtor.Create(
                       selectedPropertyNames.Select(
                           propertyName =>
                           {

@@ -41,6 +41,7 @@ public record TsType(
             TsList<TsMethod>.Empty,
             TsList<TsAttr>.Empty) { }
 
+    public override string ToString() => Ref().ToString();
     public bool SupportsPrimaryCtor => TypeKind is EKind.RecordClass or EKind.RecordStruct;
     public TsType AddAttr(TsAttr attr) => AddAttrs(attr);
     public TsType AddAttrs(params TsAttr[] attrs) => AddAttrs((IEnumerable<TsAttr>)attrs);
@@ -126,12 +127,21 @@ public record TsType(
     public TsType SetPrimaryCtor(params TsParam[] parameters) => SetPrimaryCtor((IEnumerable<TsParam>)parameters);
 
     public TsType SetPrimaryCtor(IEnumerable<TsParam> parameters)
-        => SetPrimaryCtor(new TsPrimaryCtor(TsList.Create(parameters)));
-
-    public TsType SetPrimaryCtor(TsPrimaryCtor primaryCtor) => this with { PrimaryCtor = primaryCtor };
+        => SetPrimaryCtor(TsPrimaryCtor.Create(TsList.Create(parameters)));
 
     public TsType SetPrimaryCtor(Maybe<TsPrimaryCtor> primaryCtor)
         => primaryCtor.Match(SetPrimaryCtor, RemovePrimaryCtor);
+
+    public TsType SetPrimaryCtor(TsPrimaryCtor primaryCtor)
+        => this with
+        {
+            PrimaryCtor = primaryCtor,
+            Props = Props.AddRange(
+                primaryCtor
+                    .Params
+                    .Where(param => Props.All(prop => param.Id != prop.Id && param.Type != prop.Type))
+                    .Select(param => TsProp.RecordPrimaryCtorProp(param.Type, param.Id))),
+        };
 
     public TsParam ToParam(TsId paramId, bool isParams = false) => Ref().ToParam(paramId, isParams);
 
@@ -142,7 +152,6 @@ public record TsType(
 
     private string CsBody(TsModel model)
     {
-        var primaryConstructor = CsPrimaryCtor();
         var membersAndNestedTypes = CsMembersAndNestedTypes(model).ToList();
         var lines =
             membersAndNestedTypes
@@ -155,21 +164,12 @@ public record TsType(
                 .ToList();
 
         return lines is { Count: 0 }
-            ? primaryConstructor.Match(
-                ctor => $"{ctor};",
-                () => TypeKind is EKind.RecordClass or EKind.RecordStruct ? ";" : " { }")
-            : primaryConstructor.Match(
-                ctor => $$"""
-                    {{ctor}}
-                    {
-                    {{lines.JoinLines().Indent()}}
-                    }
-                    """,
-                () => $$"""
-                    {
-                    {{lines.JoinLines().Indent()}}
-                    }
-                    """);
+            ? TypeKind is EKind.RecordClass or EKind.RecordStruct ? ";" : " { }"
+            : $$"""
+            {
+            {{lines.JoinLines().Indent()}}
+            }
+            """;
     }
 
     private IEnumerable<string> CsCtors(TsId typeId) => Ctors.Select(ctor => ctor.Cs(typeId));
@@ -207,7 +207,12 @@ public record TsType(
             () => Props.Select(prop => prop.Cs()));
 
     private string CsSignature()
-        => $"{Mods.Cs().MarginRight()}{CsKind()} {Id.Cs()}{CsBaseType().AddLeftIfNotEmpty(": ")}";
+    {
+        var primaryConstructor = CsPrimaryCtor().Match(ctor => ctor, () => "").MarginRight();
+        var modsAndKind = $"{Mods.Cs().MarginRight()}{CsKind()}";
+        var baseType = CsBaseType().AddLeftIfNotEmpty(": ");
+        return $"{modsAndKind} {Id.Cs()}{primaryConstructor}{baseType}";
+    }
 
     #endregion
 

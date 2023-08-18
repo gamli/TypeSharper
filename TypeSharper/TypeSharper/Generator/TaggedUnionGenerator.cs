@@ -17,7 +17,7 @@ public class TaggedUnionGenerator : TypeGenerator
     public override TsAttrDef AttributeDefinition(IncrementalGeneratorInitializationContext context)
         => new(
             new TsId("TypeSharperTaggedUnionAttribute"),
-            AttributeTargets.Interface | AttributeTargets.Class,
+            AttributeTargets.Class | AttributeTargets.Struct,
             TsList.Create(
                 Enumerable
                     .Range(1, 10)
@@ -141,15 +141,7 @@ public class TaggedUnionGenerator : TypeGenerator
             {
                 caseType =
                     caseType
-                        .AddCtor(
-                            new TsCtor(
-                                TsList.Create(new TsParam(innerCaseType, new TsId("value"), false)),
-                                new TsMemberMods(
-                                    ETsVisibility.Public,
-                                    new TsAbstractMod(false),
-                                    new TsStaticMod(false),
-                                    ETsOperator.None),
-                                "    => Value = value;"))
+                        .SetPrimaryCtor(TsPrimaryCtor.Create(new TsParam(innerCaseType, "Value", false)))
                         .AddProp(
                             new TsProp(
                                 innerCaseType,

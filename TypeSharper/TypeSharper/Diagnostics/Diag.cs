@@ -100,4 +100,21 @@ public static class Diag
 
         return false;
     }
+
+    public static bool RunTypeIsRecordDiagnostics(
+        SourceProductionContext sourceProductionContext,
+        TsType type)
+    {
+        if (type.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct)
+        {
+            return true;
+        }
+
+        EDiagnosticsCode.TargetTypeMustBeRecord.ReportError(
+            sourceProductionContext,
+            "The type {0} must be a record.",
+            type);
+
+        return false;
+    }
 }

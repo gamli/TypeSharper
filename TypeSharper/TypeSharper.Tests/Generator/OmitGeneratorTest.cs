@@ -53,14 +53,10 @@ public class OmitGeneratorTests
                 public int Count { get; set; }
             }
             [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>(nameof(OmitSource.Count))]
-            public partial class OmitTarget { }
+            public partial record OmitTarget { }
             """,
             // language=csharp
-            "public partial class OmitTarget",
-            // language=csharp
-            "public System.String Name { get; set; }",
-            // language=csharp
-            "public System.Boolean IsSample { get; set; }");
+            "public partial record OmitTarget(System.String Name, System.Boolean IsSample)");
 
     [Fact]
     public void Omit_multiple_properties()
@@ -74,12 +70,10 @@ public class OmitGeneratorTests
                 public int Count { get; set; }
             }
             [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>(nameof(OmitSource.Count), "IsSample")]
-            public partial class OmitTarget { }
+            public partial record OmitTarget { }
             """,
             // language=csharp
-            "public partial class OmitTarget",
-            // language=csharp
-            "public System.String Name { get; set; }");
+            "public partial record OmitTarget(System.String Name)");
 
     [Fact]
     public void Omitting_non_existing_properties_is_an_error()
@@ -92,6 +86,6 @@ public class OmitGeneratorTests
                 public string Name { get; set; }
             }
             [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Abc", "Xyz")]
-            public partial class OmitTarget { }
+            public partial record OmitTarget;
             """);
 }

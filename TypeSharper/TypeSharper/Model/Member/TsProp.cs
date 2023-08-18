@@ -1,5 +1,6 @@
 using System;
 using TypeSharper.Model.Identifier;
+using TypeSharper.Model.Modifier;
 using TypeSharper.Model.Type;
 
 namespace TypeSharper.Model.Member;
@@ -11,6 +12,17 @@ public record TsProp(
         TsProp.BodyImpl Body)
     : TsMember(Mods)
 {
+    public static TsProp RecordPrimaryCtorProp(TsTypeRef type, TsId id)
+        => new (
+            type,
+            id,
+            new TsMemberMods(
+                ETsVisibility.Public,
+                new TsAbstractMod(false),
+                new TsStaticMod(false),
+                ETsOperator.None),
+            BodyImpl.Accessors(new TsList<TsPropAccessor> { TsPropAccessor.PublicGet() }));
+
     public string Cs() => $"{Mods.Cs()} {Type.Cs()} {Id.Cs()} {Body.Cs()}";
     public string CsGetFrom(params string[] ids) => CsGetFrom(new TsQualifiedId(ids));
     public string CsGetFrom(params TsId[] ids) => CsGetFrom(new TsQualifiedId(ids));

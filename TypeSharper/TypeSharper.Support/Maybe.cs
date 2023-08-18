@@ -40,6 +40,12 @@ public abstract record Maybe<T>
     public Maybe<TResult> Match<TResult>(Func<T, Maybe<TResult>> ifSome, Func<Maybe<TResult>> ifNone)
         => this is SomeCase some ? ifSome(some.Value) : ifNone();
 
+
+    public T AssertSome()
+        => this is SomeCase some
+            ? some.Value
+            : throw new InvalidOperationException("Expected Maybe to be some - but it is none");
+
     #region Private
 
     private Maybe() { }

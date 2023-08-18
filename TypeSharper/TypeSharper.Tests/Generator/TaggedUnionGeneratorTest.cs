@@ -20,11 +20,11 @@ public class UnionGeneratorTests
             public struct CaseStruct;
 
             [TypeSharperTaggedUnion<ICaseInterface, CaseClass, CaseRecord, CaseStruct, string>("IFC", "CLS", "REC", "SCT", "PRIM")]
-            public abstract partial class UnionTarget { }
+            public abstract partial record UnionTarget;
             """,
             // language=csharp
             """
-            public abstract partial class UnionTarget
+            public abstract partial record UnionTarget
             """,
             // language=csharp
             """
@@ -85,55 +85,15 @@ public class UnionGeneratorTests
             }
             """,
             // language=csharp
-            """
-            private sealed class CLS : UnionTarget
-            {
-                public CLS(CaseClass value)
-                    => Value = value;
-            
-                public CaseClass Value { get; }
-            }
-            """,
+            "private sealed record CLS(CaseClass Value) : UnionTarget;",
             // language=csharp
-            """
-            private sealed class IFC : UnionTarget
-            {
-                public IFC(ICaseInterface value)
-                    => Value = value;
-            
-                public ICaseInterface Value { get; }
-            }
-            """,
+            "private sealed record IFC(ICaseInterface Value) : UnionTarget;",
             // language=csharp
-            """
-            private sealed class PRIM : UnionTarget
-            {
-                public PRIM(System.String value)
-                    => Value = value;
-            
-                public System.String Value { get; }
-            }
-            """,
+            "private sealed record PRIM(System.String Value) : UnionTarget;",
             // language=csharp
-            """
-            private sealed class REC : UnionTarget
-            {
-                public REC(CaseRecord value)
-                    => Value = value;
-                
-                public CaseRecord Value { get; }
-            }
-            """,
+            "private sealed record REC(CaseRecord Value) : UnionTarget;",
             // language=csharp
-            """
-            private sealed class SCT : UnionTarget
-            {
-                public SCT(CaseStruct value)
-                    => Value = value;
-            
-                public CaseStruct Value { get; }
-            }
-            """);
+            "private sealed record SCT(CaseStruct Value) : UnionTarget;");
 
     [Fact]
     public void Union_cases_are_not_required_to_have_a_value()
@@ -142,11 +102,11 @@ public class UnionGeneratorTests
             """
             using TypeSharper.Attributes;
             [TypeSharperTaggedUnion<string>("StringCase", "EmptyCase")]
-            public abstract partial class UnionWithEmptyCase { }
+            public abstract partial record UnionWithEmptyCase;
             """,
             // language=csharp
             """
-            public abstract partial class UnionWithEmptyCase
+            public abstract partial record UnionWithEmptyCase
             """,
             // language=csharp
             """
@@ -178,19 +138,9 @@ public class UnionGeneratorTests
             }
             """,
             // language=csharp
-            """
-            private sealed class EmptyCase : UnionWithEmptyCase { }
-            """,
+            "private sealed record EmptyCase : UnionWithEmptyCase;",
             // language=csharp
-            """
-            private sealed class StringCase : UnionWithEmptyCase
-            {
-                public StringCase(System.String value)
-                    => Value = value;
-            
-                public System.String Value { get; }
-            }
-            """);
+            "private sealed record StringCase(System.String Value) : UnionWithEmptyCase;");
 
     [Fact]
     public void Union_of_multiple_primitive_types()
@@ -199,11 +149,11 @@ public class UnionGeneratorTests
             """
             using TypeSharper.Attributes;
             [TypeSharperTaggedUnion<string, int, object>("StringCase", "IntCase", "AnObjectCase")]
-            public abstract partial class OneOfStringIntObject { }
+            public abstract partial record OneOfStringIntObject;
             """,
             // language=csharp
             """
-            public abstract partial class OneOfStringIntObject
+            public abstract partial record OneOfStringIntObject
             """,
             // language=csharp
             """
@@ -246,35 +196,11 @@ public class UnionGeneratorTests
             }
             """,
             // language=csharp
-            """
-            private sealed class AnObjectCase : OneOfStringIntObject
-            {
-                public AnObjectCase(System.Object value)
-                    => Value = value;
-            
-                public System.Object Value { get; }
-            }
-            """,
+            "private sealed record AnObjectCase(System.Object Value) : OneOfStringIntObject;",
             // language=csharp
-            """
-            private sealed class IntCase : OneOfStringIntObject
-            {
-                public IntCase(System.Int32 value)
-                    => Value = value;
-            
-                public System.Int32 Value { get; }
-            }
-            """,
+            "private sealed record IntCase(System.Int32 Value) : OneOfStringIntObject;",
             // language=csharp
-            """
-            private sealed class StringCase : OneOfStringIntObject
-            {
-                public StringCase(System.String value)
-                    => Value = value;
-            
-                public System.String Value { get; }
-            }
-            """);
+            "private sealed record StringCase(System.String Value) : OneOfStringIntObject;");
 
     [Fact]
     public void Union_target_type_must_be_abstract()
@@ -284,6 +210,6 @@ public class UnionGeneratorTests
             """
             using TypeSharper.Attributes;
             [TypeSharperTaggedUnion<string, int, object>("s", "i", "o")]
-            public partial class OneOfStringIntObject { }
+            public partial record OneOfStringIntObject { }
             """);
 }

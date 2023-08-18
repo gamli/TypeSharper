@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using FluentAssertions;
+using FluentAssertions.Execution;
+using FluentAssertions.Primitives;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Formatting;
@@ -62,9 +65,7 @@ public static class GeneratorTest
                             new AdhocWorkspace())
                         .ToFullString();
 
-                Diffplex.Print(generatedSrc, expectedSrc);
-
-                NormalizeCs(generatedSrc).Should().Contain(NormalizeCs(expectedSrc));
+                generatedSrc.Should().ContainIgnoreWhitespace(expectedSrc);
             }
         }
 
@@ -121,9 +122,40 @@ public static class GeneratorTest
 
     #region Private
 
-    private static readonly Regex _whitespaceRegex = new("\\s+");
-
-    private static string NormalizeCs(string cs) => _whitespaceRegex.Replace(cs.ReplaceLineEndings("\n"), " ");
 
     #endregion
+}
+
+file static class GeneratorStringAssertionsExtensions
+{
+    public static GeneratorStringAssertions Should(this string instance) => new(instance);
+}
+
+file class GeneratorStringAssertions : ReferenceTypeAssertions<string, GeneratorStringAssertions>
+{
+    public GeneratorStringAssertions(string instance)
+        : base(instance) { }
+
+    protected override string Identifier => "GeneratorStringAssertions";
+
+    public AndConstraint<GeneratorStringAssertions> ContainIgnoreWhitespace(
+        string expected,
+        string because = "",
+        params object[] becauseArgs)
+    {
+        Execute
+            .Assertion
+            .BecauseOf(because, becauseArgs)
+            .ForCondition(NormalizeWhitespace(Subject).Contains(NormalizeWhitespace(expected)))
+            .FailWith($"Expected {{0}} to contain {{1}}{{reason}}, it did not. Here is the diff:\n{{2}}",
+                Subject,
+                expected,
+                Diffplex.DiffString(Subject, expected));
+
+        return new AndConstraint<GeneratorStringAssertions>(this);
+    }
+    
+    private static readonly Regex _whitespaceRegex = new("\\s+");
+
+    private static string NormalizeWhitespace(string str) => _whitespaceRegex.Replace(str, " ");
 }

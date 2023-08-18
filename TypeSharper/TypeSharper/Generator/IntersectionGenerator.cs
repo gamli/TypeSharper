@@ -17,7 +17,7 @@ public class IntersectionGenerator : TypeGenerator
     public override TsAttrDef AttributeDefinition(IncrementalGeneratorInitializationContext context)
         => new(
             new TsId("TypeSharperIntersectionAttribute"),
-            AttributeTargets.Interface | AttributeTargets.Class,
+            AttributeTargets.Class | AttributeTargets.Struct,
             TsList.Create(
                 Enumerable
                     .Range(1, 10)
@@ -67,7 +67,7 @@ public class IntersectionGenerator : TypeGenerator
     private static TsList<TsTypeRef> ConstituentTypes(TsAttr attr) => attr.TypeArgs;
 
     private static IEnumerable<TsMethod> GenerateCastOperators(
-        IEnumerable<TsProp> props,
+        List<TsProp> props,
         TsType targetType,
         TsAttr attr)
     {
@@ -97,7 +97,7 @@ public class IntersectionGenerator : TypeGenerator
     }
 
     private static IEnumerable<TsCtor> GenerateCtors(
-        IEnumerable<TsProp> props,
+        List<TsProp> props,
         TsType targetType,
         TsAttr attr)
         => ConstituentTypes(attr)
@@ -111,22 +111,24 @@ public class IntersectionGenerator : TypeGenerator
                             new TsAbstractMod(false),
                             new TsStaticMod(false),
                             ETsOperator.None),
-                        targetType
-                            .PrimaryCtor
-                            .Match(
-                                _ =>
-                                    $": this({props.Select(prop => prop.CsGetFrom("valueToConvert")).JoinList()}) {{ }}",
-                                () =>
-                                    $$"""
-                                    {
-                                    {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToConvert")) + ";").JoinLines()}}
-                                    }
-                                    """));
+                        props.Count == 0
+                            ? "{ }"
+                            : targetType
+                              .PrimaryCtor
+                              .Match(
+                                  _ =>
+                                      $": this({props.Select(prop => prop.CsGetFrom("valueToConvert")).JoinList()}) {{ }}",
+                                  () =>
+                                      $$"""
+                                      {
+                                      {{props.Select(prop => prop.CsSet(prop.CsGetFrom("valueToConvert")) + ";").JoinLines()}}
+                                      }
+                                      """));
                 });
 
 
-    private static TsPrimaryCtor GeneratePrimaryCtor(IEnumerable<TsProp> props)
-        => new(TsList.Create(props.Select(prop => new TsParam(prop.Type, prop.Id, false))));
+    private static Maybe<TsPrimaryCtor> GeneratePrimaryCtor(IEnumerable<TsProp> props)
+        => TsPrimaryCtor.Create(TsList.Create(props.Select(prop => new TsParam(prop.Type, prop.Id, false))));
 
     private static IEnumerable<TsProp> PropsPresentInAllTypes(TsAttr attr, TsModel model)
         => ConstituentTypes(attr)

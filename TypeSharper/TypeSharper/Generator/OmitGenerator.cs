@@ -5,6 +5,7 @@ using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
 using TypeSharper.Model.Type;
 
+
 namespace TypeSharper.Generator;
 
 public class OmitGenerator : MemberSelectionTypeGenerator
@@ -26,7 +27,7 @@ public class OmitGenerator : MemberSelectionTypeGenerator
             ? targetType
               .NewPartial()
               .SetPrimaryCtor(
-                  new TsPrimaryCtor(
+                  TsPrimaryCtor.Create(
                       fromType
                           .Props
                           .Where(m => !selectedMemberNamesSet.Contains(m.Id))

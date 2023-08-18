@@ -39,90 +39,84 @@ public class TypeGeneratorTests
                 public string Name { get; set; }
             }
             [TypeSharperPickAttribute<IPickSource>("Name")]
-            public partial interface IFirstPickTarget {}
+            public partial record FirstPickTarget {}
             [TypeSharperPickAttribute<IPickSource>("Name")]
-            public partial interface ISecondPickTarget {}
+            public partial record SecondPickTarget {}
             """,
-            ("IFirstPickTarget.g.cs",
+            ("FirstPickTarget.g.cs",
                 // language=csharp
-                """
-                public partial interface IFirstPickTarget
-                {
-                    public System.String Name { get; set; }
-                }
-                """),
-            ("ISecondPickTarget.g.cs",
+                "public partial record FirstPickTarget(System.String Name)"),
+            ("SecondPickTarget.g.cs",
                 // language=csharp
-                """
-                public partial interface ISecondPickTarget
-                {
-                    public System.String Name { get; set; }
-                }
-                """));
+                "public partial record SecondPickTarget(System.String Name)"));
 
     [Fact]
-    public void Target_type_can_be_class()
-        => GeneratorTest.ExpectOutput(
+    public void Target_type_can_NOT_be_class()
+        => GeneratorTest.Fail(
+            EDiagnosticsCode.TargetTypeMustBeRecord,
             // language=csharp
             """
             public class PickSource
             {
                 public string Name { get; set; }
-                public bool IsSample { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
-            public partial class PickTarget { }
-            """,
-            // language=csharp
-            """
-            public partial class PickTarget
-            {
-                public PickTarget(PickSource fromValue)
-                {
-                    Name = fromValue.Name;
-                    IsSample = fromValue.IsSample;
-                }
-                    
-                public System.String Name { get; set; }
-                public System.Boolean IsSample { get; set; }
-                public static implicit operator PickTarget(PickSource fromValue)
-                    => new(fromValue);
-            }
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
+            public partial class PickTargetClass { }
             """);
 
     [Fact]
-    public void Target_type_can_be_interface()
-        => GeneratorTest.ExpectOutput(
+    public void Target_type_can_NOT_be_interface()
+        => GeneratorTest.Fail(
+            EDiagnosticsCode.TargetTypeMustBeRecord,
             // language=csharp
             """
             public interface IPickSource
             {
                 public string Name { get; set; }
-                public bool IsSample { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>("Name", "IsSample")]
-            public partial interface IPickTarget { }
-            """,
-            // language=csharp
-            """
-            public partial interface IPickTarget
-            {
-                public System.String Name { get; set; }
-                public System.Boolean IsSample { get; set; }
-            }
+            [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>("Name")]
+            public partial interface IPickTargetInterface { }
             """);
 
     [Fact]
-    public void Target_type_can_be_record()
+    public void Target_type_can_NOT_be_struct()
+        => GeneratorTest.Fail(
+            EDiagnosticsCode.TargetTypeMustBeRecord,
+            // language=csharp
+            """
+            public struct PickSource
+            {
+                public string Name { get; set; }
+            }
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
+            public partial struct PickTargetStruct { }
+            """);
+
+    [Fact]
+    public void Target_type_MUST_be_record()
         => GeneratorTest.ExpectOutput(
             // language=csharp
             """
             public record PickSource(string Name, bool IsSample);
+
             [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
-            public partial record PickTarget;
+            public partial record PickTargetRecordDefault;
+
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
+            public partial record class PickTargetRecordClass;
+
+            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
+            public partial record struct PickTargetRecordStruct;
             """,
-            // language=csharp
-            "public partial record PickTarget(System.String Name, System.Boolean IsSample)");
+            ("PickTargetRecordDefault.g.cs",
+                // language=csharp
+                "public partial record PickTargetRecordDefault(System.String Name, System.Boolean IsSample)"),
+            ("PickTargetRecordClass.g.cs",
+                // language=csharp
+                "public partial record PickTargetRecordClass(System.String Name, System.Boolean IsSample)"),
+            ("PickTargetRecordStruct.g.cs",
+                // language=csharp
+                "public sealed partial record struct PickTargetRecordStruct(System.String Name, System.Boolean IsSample)"));
 
     [Fact]
     public void Targeting_a_nested_type_is_possible()
@@ -137,18 +131,14 @@ public class TypeGeneratorTests
             public partial interface IPickTarget
             {
                 [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>(nameof(PickSource.Name))]
-                public partial interface INestedPickTarget {}
+                public partial record NestedPickTarget;
             }
             """,
             // language=csharp
             """
             public partial interface IPickTarget
             {
-                public partial interface INestedPickTarget
-                {
-                    public System.String Name { get; set; }
-                }
-            }
+                public partial record NestedPickTarget(System.String Name)
             """);
 
     [Fact]
@@ -174,17 +164,12 @@ public class TypeGeneratorTests
                 public bool IsSample { get; set; }
             }
             [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>(nameof(PickSource.Name))]
-            public partial interface IPickTarget {}
+            public partial record PickTarget;
             """,
             // language=csharp
-            """
-            namespace MyNs;
-
-            public partial interface IPickTarget
-            {
-                public System.String Name { get; set; }
-            }
-            """);
+            "namespace MyNs;",
+            // language=csharp
+            "public partial record PickTarget(System.String Name)");
 
     [Fact]
     public void Using_a_generated_type_in_another_generated_type_is_possible()
@@ -196,24 +181,14 @@ public class TypeGeneratorTests
                 public string Name { get; set; }
             }
             [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>(nameof(IPickSource.Name))]
-            public partial interface IFirstPickTarget {}
-            [TypeSharper.Attributes.TypeSharperPickAttribute<IFirstPickTarget>(nameof(IFirstPickTarget.Name))]
-            public partial interface ISecondPickTarget {}
+            public partial record FirstPickTarget;
+            [TypeSharper.Attributes.TypeSharperPickAttribute<FirstPickTarget>(nameof(FirstPickTarget.Name))]
+            public partial record SecondPickTarget;
             """,
-            ("IFirstPickTarget.g.cs",
+            ("FirstPickTarget.g.cs",
                 // language=csharp
-                """
-                public partial interface IFirstPickTarget
-                {
-                    public System.String Name { get; set; }
-                }
-                """),
-            ("ISecondPickTarget.g.cs",
+                "public partial record FirstPickTarget(System.String Name)"),
+            ("SecondPickTarget.g.cs",
                 // language=csharp
-                """
-                public partial interface ISecondPickTarget
-                {
-                    public System.String Name { get; set; }
-                }
-                """));
+                "public partial record SecondPickTarget(System.String Name)"));
 }

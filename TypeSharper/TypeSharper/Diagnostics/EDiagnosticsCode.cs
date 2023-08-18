@@ -7,4 +7,5 @@ public enum EDiagnosticsCode
     TypeMustBeAbstract,
     ModelCreationFailedBecauseOfSymbolError,
     PropertyDoesNotExist,
+    TargetTypeMustBeRecord,
 }

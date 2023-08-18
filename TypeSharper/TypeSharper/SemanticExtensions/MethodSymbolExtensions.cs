@@ -41,5 +41,5 @@ public static class MethodSymbolExtensions
             methodSymbol.CsBody());
 
     public static TsPrimaryCtor ToPrimaryCtor(this IMethodSymbol methodSymbol)
-        => new(methodSymbol.Parameters.ToParams());
+        => TsPrimaryCtor.Create(methodSymbol.Parameters.ToParams()).AssertSome();
 }

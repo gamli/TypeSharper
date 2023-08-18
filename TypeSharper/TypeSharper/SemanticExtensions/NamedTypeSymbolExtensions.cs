@@ -83,7 +83,7 @@ public static class NamedTypeSymbolExtensions
             namedTypeSymbol.ContainingNamespace.ToNs(),
             typeKind,
             namedTypeSymbol.ToTypeMods(),
-            primaryCtor == null ? Maybe<TsPrimaryCtor>.NONE : primaryCtor,
+            primaryCtor ?? Maybe<TsPrimaryCtor>.NONE,
             TsList.Create(
                 namedTypeSymbol
                     .InstanceConstructors

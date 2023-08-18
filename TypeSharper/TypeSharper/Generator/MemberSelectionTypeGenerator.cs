@@ -17,7 +17,7 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
     public override TsAttrDef AttributeDefinition(IncrementalGeneratorInitializationContext context)
         => new(
             AttributeId(),
-            AttributeTargets.Interface | AttributeTargets.Class,
+            AttributeTargets.Class | AttributeTargets.Struct,
             TsList.Create(
                 new TsAttrOverloadDef(
                     TsList.Create(
