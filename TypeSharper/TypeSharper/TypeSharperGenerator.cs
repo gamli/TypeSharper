@@ -66,13 +66,50 @@ public class TypeSharperGenerator : IIncrementalGenerator
 
                         foreach (var treeWithPath in syntaxTreesWithPaths)
                         {
-                            var formattedGeneratedSrc =
-                                Formatter.Format(treeWithPath.tree.GetRoot(), new AdhocWorkspace()).ToFullString();
+                            sourceProductionContext.AddSource(
+                                treeWithPath.filePath,
+                                $$"""
+                                // generated
 
-                            sourceProductionContext.AddSource(treeWithPath.filePath, formattedGeneratedSrc);
+                                {{SimplifyUsings(treeWithPath.tree.GetCompilationUnitRoot())}}
+                                """);
                         }
                     });
             });
+    }
+
+    private static string SimplifyUsings(CompilationUnitSyntax root)
+    {
+        var simplifiedRoot = root;
+        // while (true)
+        // {
+        //     var nameSyntax = simplifiedRoot
+        //                      .DescendantNodes()
+        //                      .OfType<QualifiedNameSyntax>()
+        //                      .FirstOrDefault(
+        //                          syntax => syntax.Parent
+        //                              is not BaseNamespaceDeclarationSyntax
+        //                              and not UsingStatementSyntax
+        //                              and not UsingDirectiveSyntax);
+        //
+        //     if (nameSyntax == null)
+        //     {
+        //         break;
+        //     }
+        //
+        //     var simpleName = nameSyntax.Right;
+        //     var namespaceName = nameSyntax.Left.ToString();
+        //
+        //     simplifiedRoot = simplifiedRoot.ReplaceNode(nameSyntax, simpleName);
+        //
+        //     if (simplifiedRoot.Usings.All(u => u.Name?.ToString() != namespaceName))
+        //     {
+        //         var usingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(namespaceName));
+        //         simplifiedRoot = simplifiedRoot.AddUsings(usingDirective);
+        //     }
+        // }
+
+        return Formatter.Format(simplifiedRoot.NormalizeWhitespace(), new AdhocWorkspace()).ToFullString();
     }
 
     #region Private

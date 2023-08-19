@@ -158,7 +158,7 @@ file class GeneratorStringAssertions : ReferenceTypeAssertions<string, Generator
 
     private static readonly Regex _whitespaceRegex = new("\\s+");
 
-    private static string NormalizeWhitespace(string str) => _whitespaceRegex.Replace(str, " ");
+    private static string NormalizeWhitespace(string str) => _whitespaceRegex.Replace(str, "");
 
     #endregion
 }

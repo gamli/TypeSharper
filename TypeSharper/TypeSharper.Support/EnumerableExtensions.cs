@@ -6,6 +6,19 @@ namespace TypeSharper;
 
 public static class EnumerableExtensions
 {
+    public static IEnumerable<T> SelectIf<T>(
+        this IEnumerable<T> enumerable,
+        bool condition,
+        Func<T, T> selector)
+        => condition ? enumerable.Select(selector) : enumerable;
+
+    public static IEnumerable<TResult> SelectIfElse<T, TResult>(
+        this IEnumerable<T> enumerable,
+        bool condition,
+        Func<T, TResult> trueSelector,
+        Func<T, TResult> falseSelector)
+        => condition ? enumerable.Select(trueSelector) : enumerable.Select(falseSelector);
+    
     public static IEnumerable<T> ContextWhere<T>(
         this IEnumerable<T> enumerable,
         int contextSize,
