@@ -33,35 +33,6 @@ public class Diffplex
         Console.ForegroundColor = savedColor;
     }
 
-    private static string ChangeTypeSymbol(ChangeType changeType)
-        => MatchChangeType(changeType, " ", "-", "+", "?", "~");
-
-    private static ConsoleColor ChangeTypeColor(ChangeType changeType)
-        => MatchChangeType(
-            changeType,
-            ConsoleColor.Gray,
-            ConsoleColor.Red,
-            ConsoleColor.Green,
-            ConsoleColor.DarkYellow,
-            ConsoleColor.Blue);
-
-    private static T MatchChangeType<T>(
-        ChangeType changeType,
-        T unchanged,
-        T deleted,
-        T inserted,
-        T imaginary,
-        T modified)
-        => changeType switch
-        {
-            ChangeType.Unchanged => unchanged,
-            ChangeType.Deleted   => deleted,
-            ChangeType.Inserted  => inserted,
-            ChangeType.Imaginary => imaginary,
-            ChangeType.Modified  => modified,
-            _                    => throw new ArgumentOutOfRangeException(nameof(changeType), changeType, null)
-        };
-
     public static string UnifiedDiff(string str1, string str2)
     {
         var diff = InlineDiffBuilder.Diff(str1, str2);
@@ -84,4 +55,37 @@ public class Diffplex
                    })
                .JoinLines();
     }
+
+    #region Private
+
+    private static ConsoleColor ChangeTypeColor(ChangeType changeType)
+        => MatchChangeType(
+            changeType,
+            ConsoleColor.Gray,
+            ConsoleColor.Red,
+            ConsoleColor.Green,
+            ConsoleColor.DarkYellow,
+            ConsoleColor.Blue);
+
+    private static string ChangeTypeSymbol(ChangeType changeType)
+        => MatchChangeType(changeType, " ", "-", "+", "?", "~");
+
+    private static T MatchChangeType<T>(
+        ChangeType changeType,
+        T unchanged,
+        T deleted,
+        T inserted,
+        T imaginary,
+        T modified)
+        => changeType switch
+        {
+            ChangeType.Unchanged => unchanged,
+            ChangeType.Deleted   => deleted,
+            ChangeType.Inserted  => inserted,
+            ChangeType.Imaginary => imaginary,
+            ChangeType.Modified  => modified,
+            _                    => throw new ArgumentOutOfRangeException(nameof(changeType), changeType, null),
+        };
+
+    #endregion
 }

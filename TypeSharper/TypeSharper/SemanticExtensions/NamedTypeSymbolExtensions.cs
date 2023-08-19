@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using TypeSharper.Model;
-using TypeSharper.Model.Attr;
 using TypeSharper.Model.Identifier;
 using TypeSharper.Model.Member;
 using TypeSharper.Model.Modifier;
@@ -39,11 +38,9 @@ public static class NamedTypeSymbolExtensions
 
         if (namedTypeSymbol.SpecialType != SpecialType.None)
         {
-            return new TsType(
-                name,
+            return TsType.CreateNative(
+                new TsType.TypeInfo(name, Maybe<TsTypeRef>.NONE, namedTypeSymbol.ContainingNamespace.ToNs()),
                 Maybe<TsTypeRef>.NONE,
-                Maybe<TsTypeRef>.NONE,
-                namedTypeSymbol.ContainingNamespace.ToNs(),
                 TsType.EKind.Special,
                 new TsTypeMods(
                     ETsVisibility.Public,
@@ -51,12 +48,7 @@ public static class NamedTypeSymbolExtensions
                     new TsStaticMod(false),
                     new TsSealedMod(true),
                     new TsPartialMod(false),
-                    new TsTargetTypeMod(false)),
-                Maybe<TsPrimaryCtor>.NONE,
-                new TsList<TsCtor>(),
-                new TsList<TsProp>(),
-                new TsList<TsMethod>(),
-                new TsList<TsAttr>());
+                    new TsTargetTypeMod(false)));
         }
 
         var typeKind =
@@ -70,43 +62,47 @@ public static class NamedTypeSymbolExtensions
                 _ => throw new ArgumentOutOfRangeException(nameof(namedTypeSymbol), namedTypeSymbol, null),
             };
 
-        var primaryCtor =
+        var (primaryCtor, primaryCtorProps) =
             namedTypeSymbol
                 .InstanceConstructors
                 .SingleOrDefault(ctor => ctor.IsPrimaryCtor())
-                ?.ToPrimaryCtor();
+                ?.ToPrimaryCtor()
+            ?? (Maybe<TsPrimaryCtor>.NONE, TsList<TsProp>.Empty);
 
-        return new TsType(
-            name,
-            namedTypeSymbol.BaseType(),
-            namedTypeSymbol.ContainingType(),
-            namedTypeSymbol.ContainingNamespace.ToNs(),
-            typeKind,
-            namedTypeSymbol.ToTypeMods(),
-            primaryCtor ?? Maybe<TsPrimaryCtor>.NONE,
-            TsList.Create(
-                namedTypeSymbol
-                    .InstanceConstructors
-                    .Where(ctorSymbol => !ctorSymbol.ShouldBeIgnored())
-                    .Select(ctorSymbol => ctorSymbol.ToCtor())),
-            TsList.Create(
-                namedTypeSymbol
-                    .GetMembers()
-                    .OfType<IPropertySymbol>()
-                    .Where(propertySymbol => !propertySymbol.ShouldBeIgnored())
-                    .Select(propertySymbol => propertySymbol.ToProp())),
-            TsList.Create(
-                namedTypeSymbol
-                    .GetMembers()
-                    .OfType<IMethodSymbol>()
-                    .Where(
-                        methodSymbol => methodSymbol.MethodKind == MethodKind.Ordinary
-                                        && !methodSymbol.ShouldBeIgnored())
-                    .Select(methodSymbol => methodSymbol.ToMethod())),
-            TsList.Create(
-                namedTypeSymbol
-                    .GetAttributes()
-                    .Select(attributeData => attributeData.ToAttr())));
+        return TsType
+               .CreateNative(
+                   new TsType.TypeInfo(
+                       name,
+                       namedTypeSymbol.ContainingType(),
+                       namedTypeSymbol.ContainingNamespace.ToNs()),
+                   namedTypeSymbol.BaseType(),
+                   typeKind,
+                   namedTypeSymbol.ToTypeMods())
+               .SetPrimaryCtor(primaryCtor)
+               .AddMembers(
+                   TsList.Create(
+                       namedTypeSymbol
+                           .InstanceConstructors
+                           .Where(ctorSymbol => !ctorSymbol.ShouldBeIgnored())
+                           .Select(ctorSymbol => ctorSymbol.ToCtor())),
+                   TsList.Create(
+                       namedTypeSymbol
+                           .GetMembers()
+                           .OfType<IPropertySymbol>()
+                           .Where(propertySymbol => !propertySymbol.ShouldBeIgnored())
+                           .Select(propertySymbol => propertySymbol.ToProp())),
+                   TsList.Create(
+                       namedTypeSymbol
+                           .GetMembers()
+                           .OfType<IMethodSymbol>()
+                           .Where(
+                               methodSymbol => methodSymbol.MethodKind == MethodKind.Ordinary
+                                               && !methodSymbol.ShouldBeIgnored())
+                           .Select(methodSymbol => methodSymbol.ToMethod())),
+                   TsList.Create(
+                       namedTypeSymbol
+                           .GetAttributes()
+                           .Select(attributeData => attributeData.ToAttr())));
     }
 
     public static TsTypeMods ToTypeMods(this INamedTypeSymbol namedTypeSymbol)

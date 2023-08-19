@@ -40,6 +40,11 @@ public static class MethodSymbolExtensions
             methodSymbol.ToMemberMods(),
             methodSymbol.CsBody());
 
-    public static TsPrimaryCtor ToPrimaryCtor(this IMethodSymbol methodSymbol)
-        => TsPrimaryCtor.Create(methodSymbol.Parameters.ToParams()).AssertSome();
+    public static (TsPrimaryCtor ctor, TsList<TsProp> props) ToPrimaryCtor(this IMethodSymbol methodSymbol)
+    {
+        var parameters = methodSymbol.Parameters.ToParams();
+        return (
+            TsPrimaryCtor.Create(parameters.Select(param => param.Id)).AssertSome(),
+            parameters.Select(param => param.ToPrimaryCtorProp()));
+    }
 }

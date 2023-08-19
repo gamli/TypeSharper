@@ -23,7 +23,7 @@ public class OmitGeneratorTests
             // language=csharp
             """
             public OmitTarget(OmitSource fromValue)
-            : this(fromValue.Count) { }
+            : this(fromValue.Name, fromValue.IsSample) { }
             """);
 
     [Fact]

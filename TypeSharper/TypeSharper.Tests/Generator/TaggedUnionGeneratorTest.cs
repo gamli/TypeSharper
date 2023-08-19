@@ -5,7 +5,7 @@ using Xunit;
 
 namespace TypeSharper.Tests.Generator;
 
-public class UnionGeneratorTests
+public class TaggedUnionGeneratorTests
 {
     [Fact]
     public void Union_case_values_can_be_of_any_kind()
@@ -23,38 +23,9 @@ public class UnionGeneratorTests
             public abstract partial record UnionTarget;
             """,
             // language=csharp
-            """
-            public abstract partial record UnionTarget
-            """,
+            "public abstract partial record UnionTarget",
             // language=csharp
-            """
-            private UnionTarget()
-            """,
-            // language=csharp
-            """
-            public static UnionTarget CreateIFC(ICaseInterface value)
-                => new IFC(value);
-            """,
-            // language=csharp
-            """
-            public static UnionTarget CreateCLS(CaseClass value)
-                => new CLS(value);
-            """,
-            // language=csharp
-            """
-            public static UnionTarget CreateREC(CaseRecord value)
-                => new REC(value);
-            """,
-            // language=csharp
-            """
-            public static UnionTarget CreateSCT(CaseStruct value)
-                => new SCT(value);
-            """,
-            // language=csharp
-            """
-            public static UnionTarget CreatePRIM(System.String value)
-                => new PRIM(value);
-            """,
+            "private UnionTarget()",
             // language=csharp
             """
             public void Match(
@@ -85,15 +56,15 @@ public class UnionGeneratorTests
             }
             """,
             // language=csharp
-            "private sealed record CLS(CaseClass Value) : UnionTarget;",
+            "public sealed record CLS(CaseClass Value) : UnionTarget;",
             // language=csharp
-            "private sealed record IFC(ICaseInterface Value) : UnionTarget;",
+            "public sealed record IFC(ICaseInterface Value) : UnionTarget;",
             // language=csharp
-            "private sealed record PRIM(System.String Value) : UnionTarget;",
+            "public sealed record PRIM(System.String Value) : UnionTarget;",
             // language=csharp
-            "private sealed record REC(CaseRecord Value) : UnionTarget;",
+            "public sealed record REC(CaseRecord Value) : UnionTarget;",
             // language=csharp
-            "private sealed record SCT(CaseStruct Value) : UnionTarget;");
+            "public sealed record SCT(CaseStruct Value) : UnionTarget;");
 
     [Fact]
     public void Union_cases_are_not_required_to_have_a_value()
@@ -105,23 +76,9 @@ public class UnionGeneratorTests
             public abstract partial record UnionWithEmptyCase;
             """,
             // language=csharp
-            """
-            public abstract partial record UnionWithEmptyCase
-            """,
+            "public abstract partial record UnionWithEmptyCase",
             // language=csharp
-            """
-            private UnionWithEmptyCase()
-            """,
-            // language=csharp
-            """
-            public static UnionWithEmptyCase CreateStringCase(System.String value)
-                => new StringCase(value);
-            """,
-            // language=csharp
-            """
-            public static UnionWithEmptyCase CreateEmptyCase()
-                => new EmptyCase();
-            """,
+            "private UnionWithEmptyCase()",
             // language=csharp
             """
             public void Match(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
@@ -138,9 +95,9 @@ public class UnionGeneratorTests
             }
             """,
             // language=csharp
-            "private sealed record EmptyCase : UnionWithEmptyCase;",
+            "public sealed record EmptyCase : UnionWithEmptyCase;",
             // language=csharp
-            "private sealed record StringCase(System.String Value) : UnionWithEmptyCase;");
+            "public sealed record StringCase(System.String Value) : UnionWithEmptyCase;");
 
     [Fact]
     public void Union_of_multiple_primitive_types()
@@ -152,28 +109,9 @@ public class UnionGeneratorTests
             public abstract partial record OneOfStringIntObject;
             """,
             // language=csharp
-            """
-            public abstract partial record OneOfStringIntObject
-            """,
+            "public abstract partial record OneOfStringIntObject",
             // language=csharp
-            """
-            private OneOfStringIntObject()
-            """,
-            // language=csharp
-            """
-            public static OneOfStringIntObject CreateStringCase(System.String value)
-                => new StringCase(value);
-            """,
-            // language=csharp
-            """
-            public static OneOfStringIntObject CreateIntCase(System.Int32 value)
-                => new IntCase(value);
-            """,
-            // language=csharp
-            """
-            public static OneOfStringIntObject CreateAnObjectCase(System.Object value)
-                => new AnObjectCase(value);
-            """,
+            "private OneOfStringIntObject()",
             // language=csharp
             """
             public void Match(
@@ -196,11 +134,11 @@ public class UnionGeneratorTests
             }
             """,
             // language=csharp
-            "private sealed record AnObjectCase(System.Object Value) : OneOfStringIntObject;",
+            "public sealed record AnObjectCase(System.Object Value) : OneOfStringIntObject;",
             // language=csharp
-            "private sealed record IntCase(System.Int32 Value) : OneOfStringIntObject;",
+            "public sealed record IntCase(System.Int32 Value) : OneOfStringIntObject;",
             // language=csharp
-            "private sealed record StringCase(System.String Value) : OneOfStringIntObject;");
+            "public sealed record StringCase(System.String Value) : OneOfStringIntObject;");
 
     [Fact]
     public void Union_target_type_must_be_abstract()

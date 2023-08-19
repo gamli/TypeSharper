@@ -109,7 +109,7 @@ public class TypeDependencyGraphTest
                                .Cast<INamedTypeSymbol>()
                                .Select(namedSymbol => namedSymbol.ToType());
                     })
-                .ToDictionary(type => type.Id.Value);
+                .ToDictionary(type => type.Info.Id.Value);
     }
 
     private static IEnumerable<string> EnumerateTopologicallySorted(
@@ -132,7 +132,7 @@ public class TypeDependencyGraphTest
             }
         }
 
-        return graph.OrderTypesTopologicallyByDependencies().Select(type => type.Id.Cs());
+        return graph.OrderTypesTopologicallyByDependencies().Select(type => type.Info.Id.Cs());
     }
 
     #endregion

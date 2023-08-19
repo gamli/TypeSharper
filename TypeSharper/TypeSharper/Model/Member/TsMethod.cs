@@ -31,6 +31,24 @@ public record TsMethod(
     public static TsMethod ExplicitCastOperator(TsTypeRef fromType, TsTypeRef toType, Func<TsParam, string> csBody)
         => CastOperator(fromType, toType, csBody, ETsOperator.Explicit);
 
+    public static TsMethod Factory(TsId name, TsTypeRef typeToCreate, TsTypeRef paramType, Func<TsParam, string> csBody)
+        => new(
+            name,
+            typeToCreate,
+            TsList.Create<TsTypeRef>(),
+            TsList.Create(paramType.ToParam("fromValue")),
+            new TsMemberMods(ETsVisibility.Public, new TsAbstractMod(false), new TsStaticMod(true), ETsOperator.None),
+            csBody(paramType.ToParam("fromValue")));
+
+    public static TsMethod Factory(TsId name, TsTypeRef typeToCreate, string csBody)
+        => new(
+            name,
+            typeToCreate,
+            TsList.Create<TsTypeRef>(),
+            TsList<TsParam>.Empty,
+            new TsMemberMods(ETsVisibility.Public, new TsAbstractMod(false), new TsStaticMod(true), ETsOperator.None),
+            csBody);
+
     public static TsMethod ImplicitCastOperator(TsTypeRef fromType, TsTypeRef toType, Func<TsParam, string> csBody)
         => CastOperator(fromType, toType, csBody, ETsOperator.Implicit);
 

@@ -9,6 +9,12 @@ public abstract record Maybe<T>
 
     public static Maybe<T> Some(T value) => new SomeCase(value);
 
+
+    public T AssertSome()
+        => this is SomeCase some
+            ? some.Value
+            : throw new InvalidOperationException("Expected Maybe to be some - but it is none");
+
     public Maybe<TResult> IfNone<TResult>(Func<TResult> what) => this is NoneCase ? what() : Maybe<TResult>.NONE;
     public Maybe<TResult> IfNone<TResult>(Func<Maybe<TResult>> what) => this is NoneCase ? what() : Maybe<TResult>.NONE;
 
@@ -34,17 +40,13 @@ public abstract record Maybe<T>
         }
     }
 
+    public bool Match() => Match(_ => true, () => false);
+
     public TResult Match<TResult>(Func<T, TResult> ifSome, Func<TResult> ifNone)
         => this is SomeCase some ? ifSome(some.Value) : ifNone();
 
     public Maybe<TResult> Match<TResult>(Func<T, Maybe<TResult>> ifSome, Func<Maybe<TResult>> ifNone)
         => this is SomeCase some ? ifSome(some.Value) : ifNone();
-
-
-    public T AssertSome()
-        => this is SomeCase some
-            ? some.Value
-            : throw new InvalidOperationException("Expected Maybe to be some - but it is none");
 
     #region Private
 

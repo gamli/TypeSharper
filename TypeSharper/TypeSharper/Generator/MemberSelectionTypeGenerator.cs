@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using TypeSharper.Diagnostics;
@@ -36,103 +35,17 @@ public abstract class MemberSelectionTypeGenerator : TypeGenerator
         => Diag.RunPropertyDoesNotExistDiagnostics(
             sourceProductionContext,
             FromType(attr, model),
-            SelectedPropertyNames(attr));
+            attr.FlattenedArgs().Select(arg => new TsId(arg)));
 
     #region Protected
 
     protected abstract TsId AttributeId();
 
-    protected abstract TsType DoGenerate(
-        TsModel model,
-        TsType fromType,
-        TsDict<TsId, TsProp> fromTypePropertyLookup,
-        TsList<TsId> selectedPropertyNames,
-        TsType targetType,
-        TsAttr attr);
-
-    protected override TsModel DoGenerate(TsType targetType, TsAttr attr, TsModel model)
-    {
-        var fromType = FromType(attr, model);
-
-        var fromTypePropDict = FromTypePropertyLookup(fromType);
-
-        var propNames = SelectedPropertyNames(attr);
-
-        var generatedType = DoGenerate(
-            model,
-            fromType,
-            fromTypePropDict,
-            propNames,
-            targetType,
-            attr);
-
-        return model.AddType(
-            generatedType switch
-            {
-                { TypeKind: not TsType.EKind.Interface } and { Mods.Abstract.IsSet: false }
-                    => generatedType
-                       .AddPublicCtor(
-                           generatedType switch
-                           {
-                               { SupportsPrimaryCtor: true } => CsFromTypePrimaryCtor(propNames, fromTypePropDict),
-                               _                             => CsFromTypeCtor(propNames, fromTypePropDict),
-                           },
-                           fromType.ToParam("fromValue"))
-                       .AddImplicitCastOperator(
-                           fromType.Ref(),
-                           param => $"=> new({param.CsRef()});".Indent()),
-                _ => generatedType,
-            });
-    }
-
     #endregion
 
     #region Private
 
-    private static string CsFromTypeCtor(
-        TsList<TsId> selectedPropertyNames,
-        TsDict<TsId, TsProp> fromTypePropertyLookup)
-    {
-        var propertyAssignments = selectedPropertyNames.Select(
-            propId =>
-            {
-                var prop = fromTypePropertyLookup[propId];
-                return $"{prop.CsSet(prop.CsGetFrom("fromValue"))};";
-            });
-        return $$"""
-            {
-            {{propertyAssignments.Indent()}}
-            }
-            """;
-    }
-
-    private static string CsFromTypePrimaryCtor(
-        TsList<TsId> selectedPropertyNames,
-        TsDict<TsId, TsProp> fromTypePropertyLookup)
-    {
-        var csPrimaryCtorArgs =
-            selectedPropertyNames
-                .Select(propId => fromTypePropertyLookup[propId].CsGetFrom("fromValue"))
-                .JoinList();
-        return $": this({csPrimaryCtorArgs}) {{ }}";
-    }
-
     private static TsType FromType(TsAttr attr, TsModel model) => model.Resolve(attr.TypeArgs.Single());
-
-    private static TsDict<TsId, TsProp> FromTypePropertyLookup(TsType fromType)
-        => fromType.Props.ToDictionary(prop => prop.Id);
-
-    private static TsList<TsId> SelectedPropertyNames(TsAttr attr)
-        => TsList.Create(
-            attr
-                .CtorArgs
-                .SelectMany(
-                    attrValue =>
-                        attrValue
-                            .Match(
-                                primitive => new[] { primitive },
-                                array => (IEnumerable<string>)array)
-                            .Select(propertyName => new TsId(propertyName))));
 
     #endregion
 }

@@ -60,7 +60,7 @@ public class TypeSharperGenerator : IIncrementalGenerator
                                                 .JoinString("/")
                                                 .AddRightIfNotEmpty("/");
 
-                                        return (tree: syntaxTree, filePath: $"{filePath}{newType.Id.Value}.g");
+                                        return (tree: syntaxTree, filePath: $"{filePath}{newType.Info.Id.Value}.g");
                                     })
                                 .ToList();
 
@@ -165,7 +165,10 @@ public class TypeSharperGenerator : IIncrementalGenerator
            .SyntaxProvider
            .CreateSyntaxProvider(
                (s, _)
-                   => s is InterfaceDeclarationSyntax or ClassDeclarationSyntax or StructDeclarationSyntax or RecordDeclarationSyntax,
+                   => s is InterfaceDeclarationSyntax
+                       or ClassDeclarationSyntax
+                       or StructDeclarationSyntax
+                       or RecordDeclarationSyntax,
                (ctx, cancellationToken)
                    =>
                {

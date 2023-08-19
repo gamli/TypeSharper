@@ -15,10 +15,10 @@ public static class TaggedUnionSample
             square => square.Size * square.Size,
             circle => Math.PI * circle.Radius * circle.Radius);
 
-    public static ShapeTaggedUnion CreateFourCorners(Rect rect) => ShapeTaggedUnion.CreateFourCorners(rect);
+    public static ShapeTaggedUnion CreateFourCorners(Rect rect) => ShapeTaggedUnion.FourCorners(rect);
 
     public static ShapeTaggedUnion CreateFourCornersAndEqualEdges(Square square)
-        => ShapeTaggedUnion.CreateFourCornersAndEqualEdges(square);
+        => ShapeTaggedUnion.FourCornersAndEqualEdges(square);
 
-    public static ShapeTaggedUnion CreateRoundThing(Circle circle) => ShapeTaggedUnion.CreateRoundThing(circle);
+    public static ShapeTaggedUnion CreateRoundThing(Circle circle) => ShapeTaggedUnion.RoundThing(circle);
 }

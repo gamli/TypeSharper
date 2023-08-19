@@ -1,17 +1,29 @@
-using System.Collections.Generic;
+using TypeSharper.Model.Identifier;
+using TypeSharper.Model.Type;
 
 namespace TypeSharper.Model.Member;
 
 public record TsPrimaryCtor
 {
-    private TsPrimaryCtor(TsList<TsParam> parameters) => Params = parameters;
+    public TsList<TsId> PropAndParamIds { get; }
 
-    public static Maybe<TsPrimaryCtor> Create(TsParam param) => Create(TsList.Create(param));
-    public static Maybe<TsPrimaryCtor> Create(TsList<TsParam> parameters)
-        => parameters.Count == 0
+    public static Maybe<TsPrimaryCtor> Create(TsId propAndParamId) => Create(TsList.Create(propAndParamId));
+
+    public static Maybe<TsPrimaryCtor> Create(TsList<TsId> propAndParamIds)
+        => propAndParamIds.Count == 0
             ? Maybe<TsPrimaryCtor>.NONE
-            : new TsPrimaryCtor(parameters);
+            : new TsPrimaryCtor(propAndParamIds);
 
-    public string Cs() => $"({Params.Select(param => param.Cs()).JoinList()})";
-    public TsList<TsParam> Params { get; }
+    public string Cs(TsType containingType)
+    {
+        var ps = PropAndParamIds.Select(
+            propAndParamId => new TsParam(containingType.Prop(propAndParamId).Type, propAndParamId));
+        return $"({ps.Select(param => param.Cs()).JoinList()})";
+    }
+
+    #region Private
+
+    private TsPrimaryCtor(TsList<TsId> propAndParamIds) => PropAndParamIds = propAndParamIds;
+
+    #endregion
 }

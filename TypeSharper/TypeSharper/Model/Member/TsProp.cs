@@ -13,7 +13,7 @@ public record TsProp(
     : TsMember(Mods)
 {
     public static TsProp RecordPrimaryCtorProp(TsTypeRef type, TsId id)
-        => new (
+        => new(
             type,
             id,
             new TsMemberMods(

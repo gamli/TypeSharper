@@ -68,7 +68,7 @@ public static class Diag
         if (type.Mods.Partial.IsSet)
         {
             return type.Mods.Partial.IsSet
-                   && type.ContainingType.Match(
+                   && type.Info.ContainingType.Match(
                        containingType => RunTypeHierarchyIsPartialDiagnostics(
                            sourceProductionContext,
                            model,

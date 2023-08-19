@@ -14,6 +14,17 @@ public record TsAttr(
 {
     public static readonly TsQualifiedId ATTRIBUTE_NAMESPACE_ID = new("TypeSharper", "Attributes");
     public string Cs() => $"[{Type.Cs()}{CsTypeArgs()}({CsCtorArgs()}){CsNamedArgs()}]";
+
+    public TsList<string> FlattenedArgs()
+        => TsList.Create(
+            CtorArgs
+                .SelectMany(
+                    attrValue =>
+                        attrValue
+                            .Match(
+                                primitive => new[] { primitive },
+                                array => (IEnumerable<string>)array)));
+
     public override string ToString() => Cs();
 
     #region Private

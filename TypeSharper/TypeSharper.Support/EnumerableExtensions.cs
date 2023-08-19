@@ -89,6 +89,14 @@ public static class EnumerableExtensions
         }
     }
 
+    public static IEnumerable<T> SelectWhereSome<TSource, T>(
+        this IEnumerable<TSource> enumerable,
+        Func<TSource, Maybe<T>> selector)
+        => enumerable
+           .Select(selector)
+           .Where(element => element.Match(_ => true, () => false))
+           .Select(element => element.AssertSome());
+
     public static IEnumerable<T> SkipLast<T>(this IEnumerable<T> enumerable)
     {
         var prevSet = false;

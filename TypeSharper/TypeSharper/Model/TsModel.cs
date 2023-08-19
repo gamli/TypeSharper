@@ -13,13 +13,10 @@ public record TsModel(TsDict<TsTypeRef, TsType> TypeLookup)
     public TsModel AddType(TsType type)
     {
         var typeRef = type.Ref();
-        return TypeLookup.TryGetValue(typeRef, out var existingType)
-            ? this with
-            {
-                TypeLookup =
-                TypeLookup.Set(typeRef, existingType.Merge(type)),
-            }
-            : this with { TypeLookup = TypeLookup.Add(typeRef, type) };
+        return new TsModel(
+            TypeLookup.TryGetValue(typeRef, out var existingType)
+                ? TypeLookup.Set(typeRef, existingType.Merge(type))
+                : TypeLookup.Add(typeRef, type));
     }
 
     public TsModel Diff(TsModel otherModel)
@@ -39,10 +36,10 @@ public record TsModel(TsDict<TsTypeRef, TsType> TypeLookup)
     public IEnumerable<TsType> NestedTypes(TsType type)
         => Types
            .Where(
-               maybeNestedType => maybeNestedType.ContainingType.Match(
+               maybeNestedType => maybeNestedType.Info.ContainingType.Match(
                    nestedType => nestedType == type.Ref(),
                    () => false))
-           .OrderBy(nestedType => nestedType.Id.Cs());
+           .OrderBy(nestedType => nestedType.Info.Id.Cs());
 
     public TsType Resolve(TsTypeRef typeRef) => TypeLookup[typeRef];
 
