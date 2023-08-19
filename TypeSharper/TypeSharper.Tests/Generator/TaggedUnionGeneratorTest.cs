@@ -151,7 +151,21 @@ public class TaggedUnionGeneratorTests
             public partial record OneOfStringIntObject { }
             """);
     
-    
+    [Fact]
+    public void If_methods_are_generated_for_all_cases_that_receive_a_handler_for_the_case()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            [TypeSharperTaggedUnion<string>("StringCase", "EmptyCase")]
+            public abstract partial record UnionWithEmptyCase;
+            """,
+            // language=csharp
+            """
+            public TResult? IfStringCase<TResult?>(System.Func<System.String, TResult> handleStringCase)
+                => this is StringCase caseValue ? handleStringCase(caseValue) : null;
+            """);
+
 
     [Fact]
     public void A_Match_method_is_generated_that_receives_handlers_for_each_type()

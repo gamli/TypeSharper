@@ -21,6 +21,12 @@ public static class TaggedUnionSample
         => new ShapeTaggedUnion.FourCornersAndEqualEdges(square);
 
     public static ShapeTaggedUnion CreateRoundThing(Circle circle) => new ShapeTaggedUnion.RoundThing(circle);
+
+    public static string AreaIfRoundThing(ShapeTaggedUnion shape)
+        => shape
+           .IfRoundThing(circle => circle.Radius * circle.Radius * Math.PI)
+           .IfSome(area => area + 9)
+           .Match(area => $"Area is {area}", () => "Not a Circle");
 }
 
 [TypeSharperTaggedUnion<bool>("Some", "None")]

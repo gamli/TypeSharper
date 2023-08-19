@@ -72,10 +72,10 @@ public partial interface TsType
                            new TsStaticMod(false),
                            ETsOperator.None),
                        "{ }"))
-               // .AddMethods(cases.Select(c => FactoryMethod(info, c)))
                .AddMethods(
                    MatchMethod(cases, Maybe<TsTypeRef>.NONE),
-                   MatchMethod(cases, TsTypeRef.WithoutNs("TResult")));
+                   MatchMethod(cases, TsTypeRef.WithoutNs("TResult")))
+               .AddMethods(cases.Select(IfMethod));
 
         private static IEnumerable<TsType> CreateCaseTypes(TsType containerType, TsList<TaggedUnion.Case> cases)
             => cases.Select(
@@ -140,55 +140,71 @@ public partial interface TsType
                     """);
         }
 
-        private static TsList<TsParam> CsMatchParameters(
-            TsList<TaggedUnion.Case> namesAndTypes,
-            Maybe<TsTypeRef> maybeReturnType)
-            => TsList.Create<TsParam>(
-                namesAndTypes.Select<TsParam>(
-                    t
-                        => new TsParam(
-                            TsTypeRef.WithNs(
-                                "System",
-                                t.ValueType.Match(
-                                    valueType
-                                        => maybeReturnType.Match(
-                                            returnType => $"Func<{valueType.Cs()}, {returnType.Cs()}>",
-                                            () => $"Action<{valueType.Cs()}>"),
-                                    ()
-                                        => maybeReturnType.Match(
-                                            returnType => $"Func<{returnType.Cs()}>",
-                                            () => "Action"))),
-                            $"handle{t.Name.Capitalize().Cs()}")));
+        private static TsList<TsParam> CsMatchParams(TsList<TaggedUnion.Case> cases, Maybe<TsTypeRef> maybeReturnType)
+            => TsList.Create<TsParam>(cases.Select<TsParam>(c => CsMatchParam(c, maybeReturnType)));
 
-        private static TsMethod FactoryMethod(TypeInfo containerTypeInfo, TaggedUnion.Case c)
-            => c.ValueType.Match(
-                valueType =>
-                    TsMethod.Factory(
-                        c.Name.Cs(),
-                        containerTypeInfo.Ref(),
-                        valueType,
-                        param => $"=> new {c.Name.Cs()}({param.Id.Cs()});".Indent()),
-                () => TsMethod.Factory(
-                    c.Name.Cs(),
-                    containerTypeInfo.Ref(),
-                    $"=> new {c.Name.Cs()}();".Indent()));
+        private static TsParam CsMatchParam(TaggedUnion.Case c, Maybe<TsTypeRef> maybeReturnType)
+            => new(
+                TsTypeRef.WithNs(
+                    "System",
+                    c.ValueType.Match(
+                        valueType
+                            => maybeReturnType.Match(
+                                returnType => $"Func<{valueType.Cs()}, {returnType.Cs()}>",
+                                () => $"Action<{valueType.Cs()}>"),
+                        ()
+                            => maybeReturnType.Match(
+                                returnType => $"Func<{returnType.Cs()}>",
+                                () => "Action"))),
+                CsMatchParamId(c));
+
+        private static TsId CsMatchParamId(TaggedUnion.Case c) => $"handle{c.Name.Capitalize().Cs()}";
 
         private static TsMethod MatchMethod(
-            TsList<TaggedUnion.Case> namesAndTypes,
+            TsList<TaggedUnion.Case> cases,
             Maybe<TsTypeRef> maybeReturnType)
+            => SwitchMethod(
+                "Match",
+                maybeReturnType,
+                maybeReturnType,
+                CsMatchBody(cases, maybeReturnType),
+                CsMatchParams(cases, maybeReturnType).ToArray());
+
+        private static TsMethod IfMethod(TaggedUnion.Case c)
+            => SwitchMethod(
+                $"If{c.Name}",
+                TsTypeRef.WithNs(Constants.TS_SUPPORT_NAMESPACE, "Maybe<TResult>"),
+                TsTypeRef.WithoutNs("TResult"),
+                // language=C#
+                $$"""
+                => this is {{c.Name}}{{c.ValueType.Match(_ => " caseValue", () => "")}}
+                   ? {{CsMatchParamId(c)}}({{c.ValueType.Match(_ => "caseValue.Value", () => "")}})
+                   : Maybe<TResult>.NONE;
+                """,
+                CsMatchParam(c, TsTypeRef.WithoutNs("TResult")));
+
+
+        private static TsMethod SwitchMethod(
+            string name,
+            Maybe<TsTypeRef> maybeReturnType,
+            Maybe<TsTypeRef> maybeTypeParameter,
+            string csBody,
+            params TsParam[] handlerParameters)
             => new(
-                new TsId("Match"),
+                name,
                 maybeReturnType.Match(
                     returnType => returnType,
                     () => TsTypeRef.WithoutNs("void")),
-                maybeReturnType.Match(returnType => TsList.Create(returnType), () => new TsList<TsTypeRef>()),
-                CsMatchParameters(namesAndTypes, maybeReturnType),
+                maybeTypeParameter.Match(
+                    typeParameter => TsList.Create(typeParameter),
+                    () => TsList<TsTypeRef>.Empty),
+                TsList.Create(handlerParameters),
                 new TsMemberMods(
                     ETsVisibility.Public,
                     new TsAbstractMod(false),
                     new TsStaticMod(false),
                     ETsOperator.None),
-                CsMatchBody(namesAndTypes, maybeReturnType));
+                csBody);
 
         #endregion
     }
