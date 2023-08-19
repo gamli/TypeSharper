@@ -150,4 +150,39 @@ public class TaggedUnionGeneratorTests
             [TypeSharperTaggedUnion<string, int, object>("s", "i", "o")]
             public partial record OneOfStringIntObject { }
             """);
+    
+    
+
+    [Fact]
+    public void A_Match_method_is_generated_that_receives_handlers_for_each_type()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            [TypeSharperTaggedUnion<string>("StringCase", "EmptyCase")]
+            public abstract partial record UnionWithEmptyCase;
+            """,
+            // language=csharp
+            """
+            public void Match(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
+            {
+                switch (this)
+                {
+                    case StringCase c:
+                        handleStringCase(c.Value);
+                        break;
+                    case EmptyCase:
+                        handleEmptyCase();
+                        break;
+                }
+            }
+            """,
+            // language=csharp
+            """
+            public TResult Match<TResult>(System.Func<System.String, TResult> handleStringCase, System.Func<TResult> handleEmptyCase) => this switch
+            {
+                StringCase c => handleStringCase(c.Value),
+                EmptyCase => handleEmptyCase(),
+            }
+            """);
 }

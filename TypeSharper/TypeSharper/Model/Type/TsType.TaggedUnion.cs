@@ -115,7 +115,7 @@ public partial interface TsType
                                 () =>
                                     maybeReturnType.Match(
                                         _ => $$"""
-                                            {{t.Name.Cs()}} c => handle{{t.Name.Capitalize().Cs()}}(),
+                                            {{t.Name.Cs()}} => handle{{t.Name.Capitalize().Cs()}}(),
                                             """,
                                         () => $$"""
                                             case {{t.Name.Cs()}}:

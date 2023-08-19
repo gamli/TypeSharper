@@ -22,3 +22,6 @@ public static class TaggedUnionSample
 
     public static ShapeTaggedUnion CreateRoundThing(Circle circle) => new ShapeTaggedUnion.RoundThing(circle);
 }
+
+[TypeSharperTaggedUnion<bool>("Some", "None")]
+public abstract partial record MyMaybe;
