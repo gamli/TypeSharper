@@ -5,7 +5,7 @@ using TypeSharper.Sample.SampleBaseTypes.BusinessObjects;
 
 namespace TypeSharper.Sample;
 
-[TypeSharperPick<Customer>("Id", "CreditLimit")]
+[TsPick<Customer>("Id", "CreditLimit")]
 public partial record CustomerLimit;
 
 public static class PickSample

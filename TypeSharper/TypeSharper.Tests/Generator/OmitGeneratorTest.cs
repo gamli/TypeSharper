@@ -13,7 +13,7 @@ public class OmitGeneratorTests
             // language=csharp
             """
             public record OmitSource(string Name, bool IsSample, int Count);
-            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Count")]
+            [TypeSharper.Attributes.TsOmitAttribute<OmitSource>("Count")]
             public partial record OmitTarget;
             """,
             // language=csharp
@@ -22,8 +22,8 @@ public class OmitGeneratorTests
             """,
             // language=csharp
             """
-            public OmitTarget(OmitSource fromValue)
-            : this(fromValue.Name, fromValue.IsSample) { }
+            public OmitTarget(OmitSource from)
+            : this(from.Name, from.IsSample) { }
             """);
 
     [Fact]
@@ -32,13 +32,13 @@ public class OmitGeneratorTests
             // language=csharp
             """
             public record OmitSource(string Name, bool IsSample, int Count);
-            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Count")]
+            [TypeSharper.Attributes.TsOmitAttribute<OmitSource>("Count")]
             public partial record OmitTarget;
             """,
             // language=csharp
             """
-            public static implicit operator OmitTarget(OmitSource fromValue)
-                => new(fromValue);
+            public static implicit operator OmitTarget(OmitSource from)
+                => new(from);
             """);
 
     [Fact]
@@ -52,7 +52,7 @@ public class OmitGeneratorTests
                 public bool IsSample { get; set; }
                 public int Count { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>(nameof(OmitSource.Count))]
+            [TypeSharper.Attributes.TsOmitAttribute<OmitSource>(nameof(OmitSource.Count))]
             public partial record OmitTarget { }
             """,
             // language=csharp
@@ -69,7 +69,7 @@ public class OmitGeneratorTests
                 public bool IsSample { get; set; }
                 public int Count { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>(nameof(OmitSource.Count), "IsSample")]
+            [TypeSharper.Attributes.TsOmitAttribute<OmitSource>(nameof(OmitSource.Count), "IsSample")]
             public partial record OmitTarget { }
             """,
             // language=csharp
@@ -85,7 +85,7 @@ public class OmitGeneratorTests
             {
                 public string Name { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperOmitAttribute<OmitSource>("Abc", "Xyz")]
+            [TypeSharper.Attributes.TsOmitAttribute<OmitSource>("Abc", "Xyz")]
             public partial record OmitTarget;
             """);
 }

@@ -11,6 +11,7 @@ public static class StringExtensions
 
     public static string AddLeftIfNotEmpty(this string? str, string left = " ") => AddIfNotEmpty(str, left, "");
 
+    public static string Semicolon(this string? str) => str.AddRightIfNotEmpty(";");
     public static string AddRightIfNotEmpty(this string? str, string right = " ") => AddIfNotEmpty(str, "", right);
 
     public static string Capitalize(this string? str)
@@ -46,7 +47,10 @@ public static class StringExtensions
             : singleLine;
     }
 
-    public static string JoinString(this IEnumerable<string> values, string separator)
+    public static string JoinPath(this IEnumerable<string> values)
+        => string.Join("/", values).AddRightIfNotEmpty("/");
+    
+    private static string JoinString(this IEnumerable<string> values, string separator)
         => string.Join(separator, values);
 
     public static string JoinTokens(this IEnumerable<string> tokens)

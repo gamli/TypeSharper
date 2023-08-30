@@ -4,7 +4,7 @@ using TypeSharper.Sample.SampleBaseTypes.Shape;
 
 namespace TypeSharper.Sample;
 
-[TypeSharperIntersection<Rect, Square, Circle>]
+[TsIntersection<Rect, Square, Circle>]
 public partial record ShapeIntersection;
 
 public static class IntersectionSample

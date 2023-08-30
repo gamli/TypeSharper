@@ -10,18 +10,11 @@ public abstract record EitherOr<TEither, TOr>
     public static implicit operator EitherOr<TEither, TOr>(TOr value) => Or(value);
     public static EitherOr<TEither, TOr> Or(TOr value) => new OrCase(value);
 
-    public void IfEither(Action<TEither> what)
-    {
-        if (this is EitherCase either)
-        {
-            what(either.Value);
-        }
-    }
-
-    public Maybe<TResult> IfEither<TResult>(Func<TEither, TResult> what)
-        => this is EitherCase either
-            ? Maybe<TResult>.Some(what(either.Value))
-            : Maybe<TResult>.NONE;
+    public EitherOr<TEither, TOr> IfEither(Func<TEither, EitherOr<TEither, TOr>> what)
+        => Map<EitherOr<TEither, TOr>>(what, or => or);
+    
+    public EitherOr<TResult, TOr> IfEither<TResult>(Func<TEither, TResult> what)
+        => Map<EitherOr<TResult, TOr>>(either => what(either), or => or);
 
     public void IfOr(Action<TOr> what)
     {
@@ -31,12 +24,10 @@ public abstract record EitherOr<TEither, TOr>
         }
     }
 
-    public Maybe<TResult> IfOr<TResult>(Func<TOr, TResult> what)
-        => this is OrCase or
-            ? Maybe<TResult>.Some(what(or.Value))
-            : Maybe<TResult>.NONE;
+    public EitherOr<TEither, TResult> IfOr<TResult>(Func<TOr, TResult> what)
+        => Map<EitherOr<TEither, TResult>>(either => either, or => what(or));
 
-    public void Match(Action<TEither> ifEither, Action<TOr> ifOr)
+    public void Map(Action<TEither> ifEither, Action<TOr> ifOr)
     {
         switch (this)
         {
@@ -51,7 +42,7 @@ public abstract record EitherOr<TEither, TOr>
         }
     }
 
-    public TResult Match<TResult>(Func<TEither, TResult> ifEither, Func<TOr, TResult> ifOr)
+    public TResult Map<TResult>(Func<TEither, TResult> ifEither, Func<TOr, TResult> ifOr)
         => this switch
         {
             EitherCase either => ifEither(either.Value),

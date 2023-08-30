@@ -1,21 +1,18 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using TypeSharper.Model.Attr;
 
 namespace TypeSharper.SemanticExtensions;
 
 public static class TypedConstantExtensions
 {
-    public static TsAttrValue ToAttrValue(this TypedConstant constant)
-        => constant.Kind switch
+    public static string[] ToValue(this TypedConstant constant)
+        => constant switch
         {
-            TypedConstantKind.Primitive
-                when constant.Type?.SpecialType == SpecialType.System_String
-                     && constant.Value != null =>
-                TsAttrValue.Primitive(constant.Value.ToString()),
-            TypedConstantKind.Array =>
-                TsAttrValue.Array(constant.Values.Select(el => el.ToAttrValue().AssertPrimitive())),
-            _ => throw new NotSupportedException("Only strings or arrays of strings are supported"),
+            { Kind: TypedConstantKind.Primitive, Type.SpecialType: SpecialType.System_String, Value: not null } =>
+                new[] { constant.Value.ToString() },
+            { Kind: TypedConstantKind.Array } =>
+                constant.Values.SelectMany(el => el.ToValue()).ToArray(),
+            _ => throw new NotSupportedException("Only strings or (nested) arrays of strings are supported"),
         };
 }

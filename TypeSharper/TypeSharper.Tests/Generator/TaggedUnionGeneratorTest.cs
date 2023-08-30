@@ -19,7 +19,7 @@ public class TaggedUnionGeneratorTests
             public record CaseRecord;
             public struct CaseStruct;
 
-            [TypeSharperTaggedUnion<ICaseInterface, CaseClass, CaseRecord, CaseStruct, string>("IFC", "CLS", "REC", "SCT", "PRIM")]
+            [TsTaggedUnion<ICaseInterface, CaseClass, CaseRecord, CaseStruct, string>("IFC", "CLS", "REC", "SCT", "PRIM")]
             public abstract partial record UnionTarget;
             """,
             // language=csharp
@@ -28,7 +28,7 @@ public class TaggedUnionGeneratorTests
             "private UnionTarget()",
             // language=csharp
             """
-            public void Match(
+            public void Map(
                 System.Action<ICaseInterface> handleIFC,
                 System.Action<CaseClass> handleCLS,
                 System.Action<CaseRecord> handleREC,
@@ -72,7 +72,7 @@ public class TaggedUnionGeneratorTests
             // language=csharp
             """
             using TypeSharper.Attributes;
-            [TypeSharperTaggedUnion<string>("StringCase", "EmptyCase")]
+            [TsTaggedUnion<string>("StringCase", "EmptyCase")]
             public abstract partial record UnionWithEmptyCase;
             """,
             // language=csharp
@@ -81,7 +81,7 @@ public class TaggedUnionGeneratorTests
             "private UnionWithEmptyCase()",
             // language=csharp
             """
-            public void Match(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
+            public void Map(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
             {
                 switch (this)
                 {
@@ -105,7 +105,7 @@ public class TaggedUnionGeneratorTests
             // language=csharp
             """
             using TypeSharper.Attributes;
-            [TypeSharperTaggedUnion<string, int, object>("StringCase", "IntCase", "AnObjectCase")]
+            [TsTaggedUnion<string, int, object>("StringCase", "IntCase", "AnObjectCase")]
             public abstract partial record OneOfStringIntObject;
             """,
             // language=csharp
@@ -114,7 +114,7 @@ public class TaggedUnionGeneratorTests
             "private OneOfStringIntObject()",
             // language=csharp
             """
-            public void Match(
+            public void Map(
                 System.Action<System.String> handleStringCase,
                 System.Action<System.Int32> handleIntCase,
                 System.Action<System.Object> handleAnObjectCase)
@@ -147,7 +147,7 @@ public class TaggedUnionGeneratorTests
             // language=csharp
             """
             using TypeSharper.Attributes;
-            [TypeSharperTaggedUnion<string, int, object>("s", "i", "o")]
+            [TsTaggedUnion<string, int, object>("s", "i", "o")]
             public partial record OneOfStringIntObject { }
             """);
     
@@ -157,28 +157,28 @@ public class TaggedUnionGeneratorTests
             // language=csharp
             """
             using TypeSharper.Attributes;
-            [TypeSharperTaggedUnion<string>("StringCase", "EmptyCase")]
+            [TsTaggedUnion<string>("StringCase", "EmptyCase")]
             public abstract partial record UnionWithEmptyCase;
             """,
             // language=csharp
             """
-            public TResult? IfStringCase<TResult?>(System.Func<System.String, TResult> handleStringCase)
-                => this is StringCase caseValue ? handleStringCase(caseValue) : null;
+            public Maybe<TReturn> IfStringCase<TReturn>(System.Func<System.String, TReturn> handleStringCase)
+                => this is StringCase c ? handleStringCase(c.Value) : Maybe<TReturn>.NONE;
             """);
 
 
     [Fact]
-    public void A_Match_method_is_generated_that_receives_handlers_for_each_type()
+    public void A_Map_method_is_generated_that_receives_handlers_for_each_type()
         => GeneratorTest.ExpectOutput(
             // language=csharp
             """
             using TypeSharper.Attributes;
-            [TypeSharperTaggedUnion<string>("StringCase", "EmptyCase")]
+            [TsTaggedUnion<string>("StringCase", "EmptyCase")]
             public abstract partial record UnionWithEmptyCase;
             """,
             // language=csharp
             """
-            public void Match(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
+            public void Map(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
             {
                 switch (this)
                 {
@@ -193,10 +193,10 @@ public class TaggedUnionGeneratorTests
             """,
             // language=csharp
             """
-            public TResult Match<TResult>(System.Func<System.String, TResult> handleStringCase, System.Func<TResult> handleEmptyCase) => this switch
+            public TReturn Map<TReturn>(System.Func<System.String, TReturn> handleStringCase, System.Func<TReturn> handleEmptyCase) => this switch
             {
                 StringCase c => handleStringCase(c.Value),
                 EmptyCase => handleEmptyCase(),
-            }
+            };
             """);
 }

@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using TypeSharper.Model.Modifier;
-using TypeSharper.Model.Type;
+using TypeSharper.Model;
+using TypeSharper.Model.Mod;
 using TypeSharper.SyntaxExtensions;
 
 namespace TypeSharper.SemanticExtensions;

@@ -13,7 +13,7 @@ public class PickGeneratorTests
             // language=csharp
             """
             public record PickSource(string Name, bool IsSample, int Count);
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Count")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Count")]
             public partial record PickTarget;
             """,
             // language=csharp
@@ -22,8 +22,8 @@ public class PickGeneratorTests
             """,
             // language=csharp
             """
-            public PickTarget(PickSource fromValue)
-            : this(fromValue.Count) { }
+            public PickTarget(PickSource from)
+            : this(from.Count) { }
             """);
 
     [Fact]
@@ -32,13 +32,13 @@ public class PickGeneratorTests
             // language=csharp
             """
             public record PickSource(string Name, bool IsSample, int Count);
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Count")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Count")]
             public partial record PickTarget;
             """,
             // language=csharp
             """
-            public static implicit operator PickTarget(PickSource fromValue)
-                => new(fromValue);
+            public static implicit operator PickTarget(PickSource from)
+                => new(from);
             """);
 
     [Fact]
@@ -52,7 +52,7 @@ public class PickGeneratorTests
                 public bool IsSample { get; set; }
                 public int Count { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>(nameof(PickSource.Count))]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>(nameof(PickSource.Count))]
             public partial record PickTarget;
             """,
             // language=csharp
@@ -69,11 +69,11 @@ public class PickGeneratorTests
                 public bool IsSample { get; set; }
                 public int Count { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>(nameof(PickSource.Count), "IsSample")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>(nameof(PickSource.Count), "IsSample")]
             public partial record PickTarget { }
             """,
             // language=csharp
-            "public partial record PickTarget(System.Int32 Count, System.Boolean IsSample)");
+            "public partial record PickTarget(System.Boolean IsSample, System.Int32 Count)");
 
     [Fact]
     public void Picking_a_non_existing_property_is_an_error()
@@ -82,7 +82,7 @@ public class PickGeneratorTests
             EDiagnosticsCode.PropertyDoesNotExist,
             """
             public class PickSource { }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Name")]
             public partial record PickTarget { }
             """);
 }

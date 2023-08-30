@@ -2,8 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using TypeSharper.Model;
-using TypeSharper.Model.Identifier;
-using TypeSharper.Model.Type;
 
 namespace TypeSharper.Diagnostics;
 
@@ -40,81 +38,87 @@ public static class Diag
     public static bool RunPropertyDoesNotExistDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsType type,
-        IEnumerable<TsId> propertyNames)
+        IEnumerable<TsName> propertyNames)
     {
-        var typePropLookup = type.Props.ToDictionary(prop => prop.Id);
+        var typePropLookup = 
+            type.Map(
+                    propertyDuck => propertyDuck.Props,
+                    _ => TsUniqueList.Create<TsProp>(),
+                    native => native.Props)
+                .ToDictionary(prop => prop.Name);
+        
         var nonExistingPropertyNames =
             propertyNames.Where(propName => !typePropLookup.ContainsKey(propName)).ToList();
-
+    
         if (nonExistingPropertyNames.Count == 0)
         {
             return true;
         }
-
+    
         EDiagnosticsCode.PropertyDoesNotExist.ReportError(
             sourceProductionContext,
             "The following properties do not exist on type {0}: ({1})",
             type.Ref().Cs(),
             nonExistingPropertyNames.Select(id => id.Cs()).JoinList());
-
+    
         return false;
     }
-
+    
     public static bool RunTypeHierarchyIsPartialDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsModel model,
         TsType type)
     {
-        if (type.Mods.Partial.IsSet)
+        if (type.Info.Mods.Partial.IsSet)
         {
-            return type.Mods.Partial.IsSet
-                   && type.Info.ContainingType.Match(
+            return type.Info.Mods.Partial.IsSet
+                   && type.Info.ContainingType.Map(
                        containingType => RunTypeHierarchyIsPartialDiagnostics(
                            sourceProductionContext,
                            model,
                            model.Resolve(containingType)),
                        () => true);
         }
-
+    
         EDiagnosticsCode.TypeHierarchyMustBePartial.ReportError(
             sourceProductionContext,
             "The type {0} must be partial.",
             type.Ref().Cs());
-
+    
         return false;
     }
-
+    
     public static bool RunTypeIsAbstractDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsType type)
     {
-        if (type.Mods.Abstract.IsSet)
+        if (type.Info.Mods.Abstract.IsSet)
         {
             return true;
         }
-
+    
         EDiagnosticsCode.TypeMustBeAbstract.ReportError(
             sourceProductionContext,
             "The type {0} must be abstract.",
             type);
-
+    
         return false;
     }
-
+    
     public static bool RunTypeIsRecordDiagnostics(
         SourceProductionContext sourceProductionContext,
         TsType type)
     {
-        if (type.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct)
+        if (type.Info.TypeKind is TsType.EKind.RecordClass or TsType.EKind.RecordStruct)
         {
             return true;
         }
-
+    
         EDiagnosticsCode.TargetTypeMustBeRecord.ReportError(
             sourceProductionContext,
             "The type {0} must be a record.",
             type);
-
+    
         return false;
     }
 }

@@ -22,7 +22,7 @@ public class TypeGeneratorTests
             {
                 public interface INestedPickTarget
                 {
-                    [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>(nameof(PickSource.Name))]
+                    [TypeSharper.Attributes.TsPickAttribute<IPickSource>(nameof(PickSource.Name))]
                     public partial interface INestedNestedPickTarget {}
                 }
             }
@@ -38,9 +38,9 @@ public class TypeGeneratorTests
             {
                 public string Name { get; set; }
             }
-            [TypeSharperPickAttribute<IPickSource>("Name")]
+            [TsPickAttribute<IPickSource>("Name")]
             public partial record FirstPickTarget {}
-            [TypeSharperPickAttribute<IPickSource>("Name")]
+            [TsPickAttribute<IPickSource>("Name")]
             public partial record SecondPickTarget {}
             """,
             ("FirstPickTarget.g.cs",
@@ -60,7 +60,7 @@ public class TypeGeneratorTests
             {
                 public string Name { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Name")]
             public partial class PickTargetClass { }
             """);
 
@@ -74,7 +74,7 @@ public class TypeGeneratorTests
             {
                 public string Name { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>("Name")]
+            [TypeSharper.Attributes.TsPickAttribute<IPickSource>("Name")]
             public partial interface IPickTargetInterface { }
             """);
 
@@ -88,7 +88,7 @@ public class TypeGeneratorTests
             {
                 public string Name { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Name")]
             public partial struct PickTargetStruct { }
             """);
 
@@ -99,13 +99,13 @@ public class TypeGeneratorTests
             """
             public record PickSource(string Name, bool IsSample);
 
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Name", "IsSample")]
             public partial record PickTargetRecordDefault;
 
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Name", "IsSample")]
             public partial record class PickTargetRecordClass;
 
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>("Name", "IsSample")]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>("Name", "IsSample")]
             public partial record struct PickTargetRecordStruct;
             """,
             ("PickTargetRecordDefault.g.cs",
@@ -130,7 +130,7 @@ public class TypeGeneratorTests
             }
             public partial interface IPickTarget
             {
-                [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>(nameof(PickSource.Name))]
+                [TypeSharper.Attributes.TsPickAttribute<IPickSource>(nameof(PickSource.Name))]
                 public partial record NestedPickTarget;
             }
             """,
@@ -148,7 +148,7 @@ public class TypeGeneratorTests
             // language=csharp
             """
             public class PickSource { }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<PickSource>(nameof(PickSource.Count))]
+            [TypeSharper.Attributes.TsPickAttribute<PickSource>(nameof(PickSource.Count))]
             public class PickTarget { }
             """);
 
@@ -163,7 +163,7 @@ public class TypeGeneratorTests
                 public string Name { get; set; }
                 public bool IsSample { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>(nameof(PickSource.Name))]
+            [TypeSharper.Attributes.TsPickAttribute<IPickSource>(nameof(PickSource.Name))]
             public partial record PickTarget;
             """,
             // language=csharp
@@ -180,9 +180,9 @@ public class TypeGeneratorTests
             {
                 public string Name { get; set; }
             }
-            [TypeSharper.Attributes.TypeSharperPickAttribute<IPickSource>(nameof(IPickSource.Name))]
+            [TypeSharper.Attributes.TsPickAttribute<IPickSource>(nameof(IPickSource.Name))]
             public partial record FirstPickTarget;
-            [TypeSharper.Attributes.TypeSharperPickAttribute<FirstPickTarget>(nameof(FirstPickTarget.Name))]
+            [TypeSharper.Attributes.TsPickAttribute<FirstPickTarget>(nameof(FirstPickTarget.Name))]
             public partial record SecondPickTarget;
             """,
             ("FirstPickTarget.g.cs",

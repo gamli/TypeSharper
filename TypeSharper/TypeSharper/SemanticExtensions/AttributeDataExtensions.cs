@@ -1,8 +1,7 @@
 using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using TypeSharper.Model.Attr;
-using TypeSharper.Model.Identifier;
+using TypeSharper.Model;
 
 namespace TypeSharper.SemanticExtensions;
 
@@ -13,10 +12,10 @@ public static class AttributeDataExtensions
            .AttributeClass
            ?.ContainingNamespace
            .ToDisplayString()
-           .StartsWith(TsAttr.ATTRIBUTE_NAMESPACE_ID.Cs())
+           .StartsWith(TsAttr.NS)
            ?? false;
 
-    public static TsAttr ToAttr(this AttributeData attributeData)
+    public static Maybe<TsAttr> ToAttr(this AttributeData attributeData)
     {
         var attributeClass = attributeData.AttributeClass;
 
@@ -28,21 +27,36 @@ public static class AttributeDataExtensions
         var attributeTypeRef = attributeClass.ToTypeRef();
 
         var ctorArgs =
-            TsList.Create(attributeData.ConstructorArguments.Select(arg => arg.ToAttrValue()));
+            TsUniqueList.Create(attributeData.ConstructorArguments.SelectMany(arg => arg.ToValue()));
 
         var namedArgs =
             attributeData
                 .NamedArguments
                 .ToDictionary(
-                    kv => new TsId(kv.Key),
-                    kv => kv.Value.ToAttrValue());
+                    kv => new TsName(kv.Key),
+                    kv => kv.Value.ToValue());
 
         var typeArgs =
-            TsList.Create(
+            TsUniqueList.Create(
                 attributeClass
                     .TypeArguments
                     .Select(typeArg => typeArg.ToTypeRef()));
 
-        return new TsAttr(attributeTypeRef, attributeData.IsTsAttribute(), ctorArgs, namedArgs, typeArgs);
+        return TypeSharperAttributes.MatchAttributes<TsAttr>(
+            attributeTypeRef.Name.Cs(),
+            ()
+                => new TsType.IntersectionAttr(typeArgs),
+            ()
+                => new TsType.OmittedAttr(
+                    typeArgs.Single(),
+                    TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg)))),
+            ()
+                => new TsType.PickedAttr(
+                    typeArgs.Single(),
+                    TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg)))),
+            ()
+                => new TsType.TaggedUnionAttr(
+                    TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg))),
+                    TsList.CreateRange(typeArgs)));
     }
 }

@@ -1,6 +1,6 @@
 using System;
 using Microsoft.CodeAnalysis;
-using TypeSharper.Model.Modifier;
+using TypeSharper.Model.Mod;
 
 namespace TypeSharper.SemanticExtensions;
 

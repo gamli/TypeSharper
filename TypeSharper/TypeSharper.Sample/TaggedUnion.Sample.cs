@@ -4,13 +4,13 @@ using TypeSharper.Sample.SampleBaseTypes.Shape;
 
 namespace TypeSharper.Sample;
 
-[TypeSharperTaggedUnion<Rect, Square, Circle>("FourCorners", "FourCornersAndEqualEdges", "RoundThing")]
+[TsTaggedUnion<Rect, Square, Circle>("FourCorners", "FourCornersAndEqualEdges", "RoundThing")]
 public abstract partial record ShapeTaggedUnion;
 
 public static class TaggedUnionSample
 {
     public static double Area(ShapeTaggedUnion shape)
-        => shape.Match(
+        => shape.Map(
             rect => rect.Width * rect.Height,
             square => square.Size * square.Size,
             circle => Math.PI * circle.Radius * circle.Radius);
@@ -26,8 +26,8 @@ public static class TaggedUnionSample
         => shape
            .IfRoundThing(circle => circle.Radius * circle.Radius * Math.PI)
            .IfSome(area => area + 9)
-           .Match(area => $"Area is {area}", () => "Not a Circle");
+           .Map(area => $"Area is {area}", () => "Not a Circle");
 }
 
-[TypeSharperTaggedUnion<bool>("Some", "None")]
+[TsTaggedUnion<bool>("Some", "None")]
 public abstract partial record MyMaybe;

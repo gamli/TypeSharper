@@ -24,7 +24,12 @@
 
     <ItemGroup>
         <EmbeddedResource Include="../TypeSharper.Support/Maybe.cs" LogicalName="Support.Maybe.cs"/>
+        <EmbeddedResource Include="../TypeSharper.Support/Void.cs" LogicalName="Support.Void.cs"/>
     </ItemGroup>
+
+
+
+
 
     <PropertyGroup>
         <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>

@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeSharper.Model;
-using TypeSharper.Model.Type;
 using TypeSharper.SemanticExtensions;
 using Xunit;
 
@@ -87,7 +86,7 @@ public class TypeDependencyGraphTest
 
     #region Private
 
-    private static Dictionary<string, TsType> CreateTypes(params string[] typeNames)
+    private static Dictionary<string, INamedTypeSymbol> CreateTypes(params string[] typeNames)
     {
         var compilation = CSharpCompilation.Create(
             "TestAssembly",
@@ -106,10 +105,9 @@ public class TypeDependencyGraphTest
                                .OfType<TypeDeclarationSyntax>()
                                .Select(typeDecl => semanticModel.GetDeclaredSymbol(typeDecl))
                                .Where(s => s != null)
-                               .Cast<INamedTypeSymbol>()
-                               .Select(namedSymbol => namedSymbol.ToType());
+                               .Cast<INamedTypeSymbol>();
                     })
-                .ToDictionary(type => type.Info.Id.Value);
+                .ToDictionary(type => type.Name.ToString());
     }
 
     private static IEnumerable<string> EnumerateTopologicallySorted(
@@ -132,7 +130,7 @@ public class TypeDependencyGraphTest
             }
         }
 
-        return graph.OrderTypesTopologicallyByDependencies().Select(type => type.Info.Id.Cs());
+        return graph.OrderTypesTopologicallyByDependencies().Select(type => type.Name.ToString());
     }
 
     #endregion

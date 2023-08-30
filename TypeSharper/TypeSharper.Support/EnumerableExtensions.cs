@@ -107,7 +107,7 @@ public static class EnumerableExtensions
         Func<TSource, Maybe<T>> selector)
         => enumerable
            .Select(selector)
-           .Where(element => element.Match(_ => true, () => false))
+           .Where(element => element.Map(_ => true, () => false))
            .Select(element => element.AssertSome());
 
     public static IEnumerable<T> SkipLast<T>(this IEnumerable<T> enumerable)

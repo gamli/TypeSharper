@@ -1,6 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using TypeSharper.Model.Modifier;
+using TypeSharper.Model.Mod;
 
 namespace TypeSharper.SyntaxExtensions;
 
