@@ -48,7 +48,6 @@
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
         <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" />
-        <None Remove="nuget-package\TypeSharper.0.1.1.symbols.nupkg" />
     </ItemGroup>
 
 
