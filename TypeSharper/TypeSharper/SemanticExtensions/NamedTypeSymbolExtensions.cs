@@ -9,21 +9,13 @@ namespace TypeSharper.SemanticExtensions;
 
 public static class NamedTypeSymbolExtensions
 {
-    public static bool HasTypeSharperAttribute(this INamedTypeSymbol namedTypeSymbol)
-        => namedTypeSymbol.TypeSharperAttribute().Any();
-
-    public static IEnumerable<AttributeData> TypeSharperAttribute(this INamedTypeSymbol namedTypeSymbol)
-        => namedTypeSymbol
-           .GetAttributes()
-           .Where(
-               attributeData
-                   => attributeData.AttributeClass?.ContainingNamespace?.ToQualifiedId()
-                      == (TsQualifiedName)TsAttr.NS);
-
     public static IEnumerable<ITypeSymbol> ContainingTypeHierarchy(this INamedTypeSymbol namedTypeSymbol)
         => namedTypeSymbol.ContainingType == null
             ? new List<ITypeSymbol>()
             : new[] { namedTypeSymbol.ContainingType }.Concat(namedTypeSymbol.ContainingType.ContainingTypeHierarchy());
+
+    public static bool HasTypeSharperAttribute(this INamedTypeSymbol namedTypeSymbol)
+        => namedTypeSymbol.TypeSharperAttribute().Any();
 
     public static TsType ToType(this INamedTypeSymbol namedTypeSymbol)
     {
@@ -72,6 +64,17 @@ public static class NamedTypeSymbolExtensions
                     .Reverse()
                     .Append(namedTypeSymbol.ToName()));
 
-        return TsTypeRef.WithNs(namedTypeSymbol.ContainingNamespace.ToNsRef(), new TsQualifiedName(idParts));
+        return TsTypeRef.WithNs(
+            namedTypeSymbol.ContainingNamespace.ToNsRef(),
+            new TsQualifiedName(idParts),
+            TsList.Create(namedTypeSymbol.TypeArguments.Select(t => ((INamedTypeSymbol)t).ToTypeRef())));
     }
+
+    public static IEnumerable<AttributeData> TypeSharperAttribute(this INamedTypeSymbol namedTypeSymbol)
+        => namedTypeSymbol
+           .GetAttributes()
+           .Where(
+               attributeData
+                   => attributeData.AttributeClass?.ContainingNamespace?.ToQualifiedId()
+                      == (TsQualifiedName)TsAttr.NS);
 }

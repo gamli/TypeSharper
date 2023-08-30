@@ -8,15 +8,29 @@ public record TsTypeRef : IComparable<TsTypeRef>
 {
     public TsArrayMod ArrayMod { get; init; }
     public TsQualifiedName Name { get; init; }
+    public TsList<TsTypeRef> TypeArguments { get; init; }
 
     public static TsTypeRef WithNs(TsQualifiedName ns, TsQualifiedName name)
-        => new(ns.Append(name), new TsArrayMod(false));
+        => WithNs(ns, name, TsList<TsTypeRef>.Empty);
+    
+    public static TsTypeRef WithNs(TsQualifiedName ns, TsQualifiedName name, TsList<TsTypeRef> typeArguments)
+        => new(ns.Append(name), new TsArrayMod(false), typeArguments);
 
+    public static TsTypeRef WithNsArray(TsQualifiedName ns, TsQualifiedName name, TsList<TsTypeRef> typeArguments)
+        => new(ns.Append(name), new TsArrayMod(true), typeArguments);
+    
     public static TsTypeRef WithNsArray(TsQualifiedName ns, TsQualifiedName name)
-        => new(ns.Append(name), new TsArrayMod(true));
+        => WithNsArray(ns, name, TsList<TsTypeRef>.Empty);
 
-    public static TsTypeRef WithoutNs(TsQualifiedName name) => new(name, new TsArrayMod(false));
-    public static TsTypeRef WithoutNsArray(TsQualifiedName name) => new(name, new TsArrayMod(true));
+    public static TsTypeRef WithoutNs(TsQualifiedName name)
+    => WithoutNs(name, TsList<TsTypeRef>.Empty);
+    public static TsTypeRef WithoutNs(TsQualifiedName name, TsList<TsTypeRef> typeArguments)
+        => new(name, new TsArrayMod(false), typeArguments);
+    
+    public static TsTypeRef WithoutNsArray(TsQualifiedName name)
+        => WithoutNsArray(name, TsList<TsTypeRef>.Empty);
+    public static TsTypeRef WithoutNsArray(TsQualifiedName name, TsList<TsTypeRef> typeArguments)
+        => new(name, new TsArrayMod(true), typeArguments);
 
     public TsTypeRef AddId(TsName name) => this with { Name = Name.Add(name) };
 
@@ -32,7 +46,7 @@ public record TsTypeRef : IComparable<TsTypeRef>
 
     #region Private
 
-    private TsTypeRef(TsQualifiedName name, TsArrayMod arrayMod)
+    private TsTypeRef(TsQualifiedName name, TsArrayMod arrayMod, TsList<TsTypeRef> typeArguments)
     {
         if (name.Parts.Any(part => part.Cs() == "::global"))
         {
@@ -46,6 +60,7 @@ public record TsTypeRef : IComparable<TsTypeRef>
 
         Name = name;
         ArrayMod = arrayMod;
+        TypeArguments = typeArguments;
     }
 
     #endregion
