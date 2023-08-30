@@ -2,7 +2,7 @@
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
-        <IsPackable>false</IsPackable>
+        <IsPackable>true</IsPackable>
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
 
@@ -11,6 +11,24 @@
 
         <RootNamespace>TypeSharper</RootNamespace>
         <PackageId>TypeSharper</PackageId>
+        
+        <Version>0.1.0</Version>
+        <Authors>Markus Dibo</Authors>
+        <Description>
+            This source generator aims to implement some higher order types known from other languages
+            like TypeScript or F#. A higher order type creates a type from another type - aka computing
+            with types.
+            
+            The currently implemented higher order types are:
+            * Tagged Union (a choice of multiple named values)
+            * Intersection (a type that contains the properties that are present in all given types)
+            * Pick (a selection of the properties of a given type)
+            * Omit (all but a selection of the properties of a given type)
+            
+            All types try to resemble Duck Types as close as is possible in C#. Duck Types are compared
+            by their shape and not by their name as it is with normal C# types (nominal typing).
+        </Description>
+        <PackageTags>roslyn sourcegenerator type</PackageTags>
     </PropertyGroup>
 
     <ItemGroup Label="Package References">
@@ -27,8 +45,10 @@
         <EmbeddedResource Include="../TypeSharper.Support/Void.cs" LogicalName="Support.Void.cs"/>
     </ItemGroup>
 
-
-
+    <ItemGroup>
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
+        <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
 
 
     <PropertyGroup>
