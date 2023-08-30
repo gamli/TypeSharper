@@ -6,6 +6,11 @@ namespace TypeSharper;
 
 public static class EnumerableExtensions
 {
+    public static IEnumerable<T> Concat<T>(this T firstElement, IEnumerable<T> restEnumerable)
+        => new[] { firstElement }.Concat(restEnumerable);
+    public static IEnumerable<T> Append<T>(this T firstElement, T secondElement)
+        => new[] { firstElement }.Append(secondElement);
+
     public static IEnumerable<T> SelectIf<T>(
         this IEnumerable<T> enumerable,
         bool condition,
@@ -18,7 +23,7 @@ public static class EnumerableExtensions
         Func<T, TResult> trueSelector,
         Func<T, TResult> falseSelector)
         => condition ? enumerable.Select(trueSelector) : enumerable.Select(falseSelector);
-    
+
     public static IEnumerable<T> ContextWhere<T>(
         this IEnumerable<T> enumerable,
         int contextSize,

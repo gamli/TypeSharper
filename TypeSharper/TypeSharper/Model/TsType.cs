@@ -30,6 +30,9 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
     public Maybe<T> IfPropertyDuck<T>(Func<Duck, T> handlePropertyDuck)
         => this is PropertyDuck propertyDuck ? handlePropertyDuck(propertyDuck) : Maybe<T>.NONE;
 
+    public Maybe<T> IfPropertySelection<T>(Func<PropertySelection, T> handlePropertySelection)
+        => this is PropertySelection propertySelection ? handlePropertySelection(propertySelection) : Maybe<T>.NONE;
+
     public Maybe<T> IfTaggedUnion<T>(Func<TaggedUnion, T> handleTaggedUnion)
         => this is TaggedUnion taggedUnion ? handleTaggedUnion(taggedUnion) : Maybe<T>.NONE;
 
@@ -51,7 +54,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
             _                         => throw new ArgumentOutOfRangeException(),
         };
 
-    public T Map<T>(
+    public T MapPropertySelection<T>(
         Func<PropertySelection, T> handlePropertySelection,
         Func<Intersection, T> handleIntersection,
         Func<TaggedUnion, T> handleTaggedUnion,
@@ -65,7 +68,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
             _                                   => throw new ArgumentOutOfRangeException(),
         };
 
-    public T Map<T>(
+    public T MapPropertyDuck<T>(
         Func<PropertyDuck, T> handlePropertyDuck,
         Func<TaggedUnion, T> handleTaggedUnion,
         Func<Native, T> handleNative)

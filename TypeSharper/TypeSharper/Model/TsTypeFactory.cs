@@ -16,6 +16,11 @@ public static class TsTypeFactory
             _                                        => throw new ArgumentOutOfRangeException(nameof(attr)),
         };
 
+    public static TsType CreateNative(TsType.TypeInfo typeInfo, IEnumerable<TsProp> props)
+        => new TsType.Native(typeInfo, TsUniqueList.Create(props));
+
+    #region Private
+
     private static TsType Create(
         TsType.TypeInfo info,
         TsType.PickedAttr pickedAttr,
@@ -48,7 +53,7 @@ public static class TsTypeFactory
                 .TypesToIntersect
                 .Select(model.Resolve)
                 .Select(
-                    type => type.Map(
+                    type => type.MapPropertyDuck(
                         propertyDuck => propertyDuck.Props,
                         _ => TsUniqueList.Create<TsProp>(),
                         native => native.Props))
@@ -61,15 +66,6 @@ public static class TsTypeFactory
                     .First()
                     .Where(candidateProp => propss.All(props => props.Any(prop => prop.Name == candidateProp.Name)))));
     }
-
-
-    private static TsUniqueList<TsProp> FromTypeProperties(TsTypeRef fromType, TsModel model)
-        => model
-           .Resolve(fromType)
-           .Map(
-               propertyDuck => propertyDuck.Props,
-               _ => TsUniqueList.Create<TsProp>(),
-               native => native.Props);
 
     private static TsType Create(
         TsType.TypeInfo info,
@@ -87,6 +83,14 @@ public static class TsTypeFactory
                             .Concat(Maybe<TsTypeRef>.NONE.Repeat()),
                         (name, valueType) => new TsType.TaggedUnion.Case(name, valueType))));
 
-    public static TsType CreateNative(TsType.TypeInfo typeInfo, IEnumerable<TsProp> props)
-        => new TsType.Native(typeInfo, TsUniqueList.Create(props));
+
+    private static TsUniqueList<TsProp> FromTypeProperties(TsTypeRef fromType, TsModel model)
+        => model
+           .Resolve(fromType)
+           .MapPropertyDuck(
+               propertyDuck => propertyDuck.Props,
+               _ => TsUniqueList.Create<TsProp>(),
+               native => native.Props);
+
+    #endregion
 }

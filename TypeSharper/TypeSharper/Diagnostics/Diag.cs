@@ -41,7 +41,7 @@ public static class Diag
         IEnumerable<TsName> propertyNames)
     {
         var typePropLookup = 
-            type.Map(
+            type.MapPropertyDuck(
                     propertyDuck => propertyDuck.Props,
                     _ => TsUniqueList.Create<TsProp>(),
                     native => native.Props)

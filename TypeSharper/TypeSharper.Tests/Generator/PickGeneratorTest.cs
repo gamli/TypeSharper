@@ -8,6 +8,48 @@ namespace TypeSharper.Tests.Generator;
 public class PickGeneratorTests
 {
     [Fact]
+    public void Picking_from_another_pick_type_includes_it_constructors_recursively()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            public interface IPickSource
+            {
+                public string Name { get; set; }
+                public string Description { get; set; }
+            }
+            [TsPickAttribute<IPickSource>("Name", "Description")]
+            public partial record FirstPickTarget;
+            [TsOmitAttribute<FirstPickTarget>("Description")]
+            public partial record SecondOmitTarget;
+            [TsPickAttribute<SecondOmitTarget>("Name")]
+            public partial record ThirdPickTarget;
+            """,
+            ("FirstPickTarget.g.cs", new[] { "" }),
+            ("SecondOmitTarget.g.cs",
+                new[]
+                {
+                    // language=csharp
+                    "public partial record SecondOmitTarget(System.String Name)",
+                    // language=csharp
+                    "public SecondOmitTarget(IPickSource from) : this(from.Name) { }",
+                    // language=csharp
+                    "public SecondOmitTarget(FirstPickTarget from) : this(from.Name) { }",
+                }),
+            ("ThirdPickTarget.g.cs",
+                new[]
+                {
+                    // language=csharp
+                    "public partial record ThirdPickTarget(System.String Name)",
+                    // language=csharp
+                    "public ThirdPickTarget(IPickSource from) : this(from.Name) { }",
+                    // language=csharp
+                    "public ThirdPickTarget(FirstPickTarget from) : this(from.Name) { }",
+                    // language=csharp
+                    "public ThirdPickTarget(SecondOmitTarget from) : this(from.Name) { }",
+                }));
+
+    [Fact]
     public void A_constructor_that_takes_the_from_type_as_argument_is_generated()
         => GeneratorTest.ExpectOutput(
             // language=csharp
