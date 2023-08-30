@@ -51,6 +51,20 @@ public class TypeGeneratorTests
                 "public partial record SecondPickTarget(System.String Name)"));
 
     [Fact]
+    public void Generic_types_are_supported_as_properties()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            using System.Collections.Generic;
+            public record PickSource(List<string> Strings);
+            [TsPickAttribute<PickSource>("Strings")]
+            public partial record PickTarget;
+            """,
+            // language=csharp
+            "public partial record PickTarget(System.Collections.Generic.List<System.String> Strings)");
+
+    [Fact]
     public void Target_type_can_NOT_be_class()
         => GeneratorTest.Fail(
             EDiagnosticsCode.TargetTypeMustBeRecord,

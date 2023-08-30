@@ -34,7 +34,10 @@ public record TsTypeRef : IComparable<TsTypeRef>
 
     public TsTypeRef AddId(TsName name) => this with { Name = Name.Add(name) };
 
-    public string Cs() => Name.Cs() + ArrayMod.Cs();
+    public string Cs()
+        => Name.Cs()
+           + (TypeArguments.Any() ? $"<{TypeArguments.Select(typeRef => typeRef.Cs()).JoinList()}>" : "")
+           + ArrayMod.Cs();
 
     public int CompareTo(TsTypeRef other)
         => string.Compare(Cs(), other.Cs(), StringComparison.InvariantCultureIgnoreCase);
