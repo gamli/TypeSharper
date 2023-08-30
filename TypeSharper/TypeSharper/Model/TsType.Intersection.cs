@@ -1,4 +1,6 @@
 using System.Linq;
+using Microsoft.CodeAnalysis;
+using TypeSharper.Diagnostics;
 
 namespace TypeSharper.Model;
 
@@ -51,7 +53,36 @@ public abstract partial record TsType
         #endregion
     }
 
-    public record IntersectionAttr(TsUniqueList<TsTypeRef> TypesToIntersect) : TsAttr;
+    public record IntersectionAttr(TsUniqueList<TsTypeRef> TypesToIntersect) : TsAttr
+    {
+        protected override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
+        {
+            var unsupportedTypes =
+                TsUniqueList.Create(
+                    TypesToIntersect
+                        .SelectWhereSome(
+                            typeRef
+                                => model
+                                   .Resolve(typeRef)
+                                   .MapPropertyDuck(
+                                       _ => Maybe<TsType>.NONE,
+                                       taggedUnion => taggedUnion,
+                                       _ => Maybe<TsType>.NONE)));
+            if (unsupportedTypes.Any())
+            {
+                return new DiagnosticsError(
+                    EDiagnosticsCode.IntersectionOfTaggedUnionsIsNotSupported,
+                    targetTypeSymbol,
+                    $$"""
+                    Intersection type {0} tries to intersect tagged union types which is currently not supported.
+                    The following types are union types:
+                    {{unsupportedTypes.Select(type => $"* {type.Ref().Cs()}").JoinLines()}}
+                    """,
+                    targetTypeSymbol);
+            }
+            return Maybe<DiagnosticsError>.NONE;
+        }
+    }
 
     #endregion
 }

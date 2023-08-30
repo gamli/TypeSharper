@@ -15,7 +15,9 @@ public abstract record Maybe<T>
             ? some.Value
             : throw new InvalidOperationException("Expected Maybe to be some - but it is none");
 
+    public Maybe<T> IfNone(Func<T> what) => this is NoneCase ? what() : this;
     public Maybe<TResult> IfNone<TResult>(Func<TResult> what) => this is NoneCase ? what() : Maybe<TResult>.NONE;
+    public Maybe<T> IfNone(Func<Maybe<T>> what) => this is NoneCase ? what() : this;
     public Maybe<TResult> IfNone<TResult>(Func<Maybe<TResult>> what) => this is NoneCase ? what() : Maybe<TResult>.NONE;
 
     public void IfNone(Action what)

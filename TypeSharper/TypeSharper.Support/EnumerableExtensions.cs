@@ -110,9 +110,11 @@ public static class EnumerableExtensions
     public static IEnumerable<T> SelectWhereSome<TSource, T>(
         this IEnumerable<TSource> enumerable,
         Func<TSource, Maybe<T>> selector)
+        => enumerable.Select(selector).WhereSome();
+    
+    public static IEnumerable<TSource> WhereSome<TSource>(this IEnumerable<Maybe<TSource>> enumerable)
         => enumerable
-           .Select(selector)
-           .Where(element => element.Map(_ => true, () => false))
+           .Where(element => element.Map())
            .Select(element => element.AssertSome());
 
     public static IEnumerable<T> SkipLast<T>(this IEnumerable<T> enumerable)

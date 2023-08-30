@@ -1,11 +1,27 @@
 using System.Linq;
+using Microsoft.CodeAnalysis;
+using TypeSharper.Diagnostics;
 
 namespace TypeSharper.Model;
 
 public abstract partial record TsType
 {
+    public record TaggedUnionAttr(TsUniqueList<TsName> CaseNames, TsList<TsTypeRef> CaseTypes) : TsAttr
+    {
+        protected override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
+            => !targetTypeSymbol.IsAbstract
+                ? new DiagnosticsError(
+                    EDiagnosticsCode.TaggedUnionTargetTypeIsNotAbstract,
+                    targetTypeSymbol,
+                    "The type {0} must be abstract in order to be a tagged union type."
+                    + " A tagged union type must never be created directly but only through the factory functions"
+                    + " that generated the private sealed case types."
+                    + " This way TypeSharper makes sure that there can be no further subclasses of {0} and thus the"
+                    + " matching is exhaustive.",
+                    targetTypeSymbol)
+                : Maybe<DiagnosticsError>.NONE;
+    }
 
-    public record TaggedUnionAttr(TsUniqueList<TsName> CaseNames, TsList<TsTypeRef> CaseTypes) : TsAttr;
     #region Nested types
 
     public sealed record TaggedUnion(TypeInfo Info, TsUniqueList<TaggedUnion.Case> Cases) : Duck(Info)

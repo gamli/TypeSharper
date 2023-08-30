@@ -143,7 +143,7 @@ public class TaggedUnionGeneratorTests
     [Fact]
     public void Union_target_type_must_be_abstract()
         => GeneratorTest.Fail(
-            EDiagnosticsCode.TypeMustBeAbstract,
+            EDiagnosticsCode.TaggedUnionTargetTypeIsNotAbstract,
             // language=csharp
             """
             using TypeSharper.Attributes;

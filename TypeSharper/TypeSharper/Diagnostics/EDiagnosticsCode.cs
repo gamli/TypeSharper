@@ -3,9 +3,11 @@ namespace TypeSharper.Diagnostics;
 public enum EDiagnosticsCode
 {
     UnknownGeneratorError,
-    TypeHierarchyMustBePartial,
-    TypeMustBeAbstract,
-    ModelCreationFailedBecauseOfSymbolError,
+    TargetTypeHierarchyIsNotPartial,
+    TaggedUnionTargetTypeIsNotAbstract,
+    IntersectionOfTaggedUnionsIsNotSupported,
+    TargetTypeSymbolHasError,
     PropertyDoesNotExist,
-    TargetTypeMustBeRecord,
+    TargetTypeIsNotARecord,
+    MultipleTsAttributesAreNotAllowed,
 }

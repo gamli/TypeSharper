@@ -51,16 +51,6 @@ public record TsTypeRef : IComparable<TsTypeRef>
 
     private TsTypeRef(TsQualifiedName name, TsArrayMod arrayMod, TsList<TsTypeRef> typeArguments)
     {
-        if (name.Parts.Any(part => part.Cs() == "::global"))
-        {
-            throw new ArgumentOutOfRangeException(nameof(name), "::global should never be passed as ID");
-        }
-
-        if (name.Parts.Any(part => string.IsNullOrEmpty(part.Cs())))
-        {
-            throw new ArgumentOutOfRangeException(nameof(name), "namespace part should never be empty");
-        }
-
         Name = name;
         ArrayMod = arrayMod;
         TypeArguments = typeArguments;

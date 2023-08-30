@@ -84,7 +84,7 @@ public static class TsTypeFactory
                         (name, valueType) => new TsType.TaggedUnion.Case(name, valueType))));
 
 
-    private static TsUniqueList<TsProp> FromTypeProperties(TsTypeRef fromType, TsModel model)
+    public static TsUniqueList<TsProp> FromTypeProperties(TsTypeRef fromType, TsModel model)
         => model
            .Resolve(fromType)
            .MapPropertyDuck(

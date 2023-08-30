@@ -10,7 +10,7 @@ public class TypeGeneratorTests
     [Fact]
     public void All_types_in_a_nested_type_hierarchy_must_be_partial()
         => GeneratorTest.Fail(
-            EDiagnosticsCode.TypeHierarchyMustBePartial,
+            EDiagnosticsCode.TargetTypeHierarchyIsNotPartial,
             // language=csharp
             """
             public interface IPickSource
@@ -67,7 +67,7 @@ public class TypeGeneratorTests
     [Fact]
     public void Target_type_can_NOT_be_class()
         => GeneratorTest.Fail(
-            EDiagnosticsCode.TargetTypeMustBeRecord,
+            EDiagnosticsCode.TargetTypeIsNotARecord,
             // language=csharp
             """
             public class PickSource
@@ -81,7 +81,7 @@ public class TypeGeneratorTests
     [Fact]
     public void Target_type_can_NOT_be_interface()
         => GeneratorTest.Fail(
-            EDiagnosticsCode.TargetTypeMustBeRecord,
+            EDiagnosticsCode.TargetTypeIsNotARecord,
             // language=csharp
             """
             public interface IPickSource
@@ -95,7 +95,7 @@ public class TypeGeneratorTests
     [Fact]
     public void Target_type_can_NOT_be_struct()
         => GeneratorTest.Fail(
-            EDiagnosticsCode.TargetTypeMustBeRecord,
+            EDiagnosticsCode.TargetTypeIsNotARecord,
             // language=csharp
             """
             public struct PickSource
@@ -158,7 +158,7 @@ public class TypeGeneratorTests
     [Fact]
     public void Targeting_a_non_partial_type_generates_an_error()
         => GeneratorTest.Fail(
-            EDiagnosticsCode.TypeHierarchyMustBePartial,
+            EDiagnosticsCode.TargetTypeHierarchyIsNotPartial,
             // language=csharp
             """
             public class PickSource { }

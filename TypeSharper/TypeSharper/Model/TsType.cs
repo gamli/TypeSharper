@@ -27,7 +27,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
     public Maybe<T> IfPicked<T>(Func<Picked, T> handlePicked)
         => this is Picked picked ? handlePicked(picked) : Maybe<T>.NONE;
 
-    public Maybe<T> IfPropertyDuck<T>(Func<Duck, T> handlePropertyDuck)
+    public Maybe<T> IfPropertyDuck<T>(Func<PropertyDuck, T> handlePropertyDuck)
         => this is PropertyDuck propertyDuck ? handlePropertyDuck(propertyDuck) : Maybe<T>.NONE;
 
     public Maybe<T> IfPropertySelection<T>(Func<PropertySelection, T> handlePropertySelection)

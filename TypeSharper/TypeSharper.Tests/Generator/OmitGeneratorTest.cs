@@ -17,12 +17,14 @@ public class OmitGeneratorTests
             {
                 public string Name { get; set; }
                 public string Description { get; set; }
+                public string Phone { get; set; }
+                public string Fax { get; set; }
             }
             [TsOmitAttribute<IOmitSource>("Name")]
             public partial record FirstOmitTarget;
-            [TsPickAttribute<FirstOmitTarget>("Description")]
+            [TsPickAttribute<FirstOmitTarget>("Description", "Phone")]
             public partial record SecondPickTarget;
-            [TsOmitAttribute<SecondPickTarget>("Name")]
+            [TsOmitAttribute<SecondPickTarget>("Phone")]
             public partial record ThirdOmitTarget;
             """,
             ("FirstOmitTarget.g.cs", new[] { "" }),
@@ -30,11 +32,11 @@ public class OmitGeneratorTests
                 new[]
                 {
                     // language=csharp
-                    "public partial record SecondPickTarget(System.String Description)",
+                    "public partial record SecondPickTarget(System.String Description, System.String Phone)",
                     // language=csharp
-                    "public SecondPickTarget(IOmitSource from) : this(from.Description) { }",
+                    "public SecondPickTarget(IOmitSource from) : this(from.Description, from.Phone) { }",
                     // language=csharp
-                    "public SecondPickTarget(FirstOmitTarget from) : this(from.Description) { }",
+                    "public SecondPickTarget(FirstOmitTarget from) : this(from.Description, from.Phone) { }",
                 }),
             ("ThirdOmitTarget.g.cs",
                 new[]
