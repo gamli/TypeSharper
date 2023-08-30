@@ -12,7 +12,7 @@
         <RootNamespace>TypeSharper</RootNamespace>
         <PackageId>TypeSharper</PackageId>
         
-        <Version>0.1.0</Version>
+        <Version>0.1.1</Version>
         <Authors>Markus Dibo</Authors>
         <Description>
             This source generator aims to implement some higher order types known from other languages
