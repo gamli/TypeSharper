@@ -55,6 +55,8 @@ public static class AttributeDataExtensions
                     typeArgs.Single(),
                     TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg)))),
             ()
+                => new TsType.ProductAttr(typeArgs),
+            ()
                 => new TsType.TaggedUnionAttr(
                     TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg))),
                     TsList.CreateRange(typeArgs)));

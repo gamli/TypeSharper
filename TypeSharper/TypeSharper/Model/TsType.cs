@@ -15,6 +15,9 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
 
     public Maybe<T> IfDuck<T>(Func<Duck, T> handleDuck) => this is Duck duck ? handleDuck(duck) : Maybe<T>.NONE;
 
+    public Maybe<T> IfProduct<T>(Func<Product, T> handleProduct)
+        => this is Product product ? handleProduct(product) : Maybe<T>.NONE;
+    
     public Maybe<T> IfIntersection<T>(Func<Intersection, T> handleIntersection)
         => this is Intersection intersection ? handleIntersection(intersection) : Maybe<T>.NONE;
 
@@ -42,6 +45,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
         Func<Picked, T> handlePicked,
         Func<Omitted, T> handleOmitted,
         Func<Intersection, T> handleIntersection,
+        Func<Product, T> handleProduct,
         Func<TaggedUnion, T> handleTaggedUnion,
         Func<Native, T> handleNative)
         => this switch
@@ -49,6 +53,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
             Picked picked             => handlePicked(picked),
             Omitted omitted           => handleOmitted(omitted),
             Intersection intersection => handleIntersection(intersection),
+            Product product           => handleProduct(product),
             TaggedUnion taggedUnion   => handleTaggedUnion(taggedUnion),
             Native native             => handleNative(native),
             _                         => throw new ArgumentOutOfRangeException(),
@@ -57,12 +62,14 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
     public T MapPropertySelection<T>(
         Func<PropertySelection, T> handlePropertySelection,
         Func<Intersection, T> handleIntersection,
+        Func<Product, T> handleProduct,
         Func<TaggedUnion, T> handleTaggedUnion,
         Func<Native, T> handleNative)
         => this switch
         {
             PropertySelection propertySelection => handlePropertySelection(propertySelection),
             Intersection intersection           => handleIntersection(intersection),
+            Product product                     => handleProduct(product),
             TaggedUnion taggedUnion             => handleTaggedUnion(taggedUnion),
             Native native                       => handleNative(native),
             _                                   => throw new ArgumentOutOfRangeException(),
@@ -80,7 +87,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
             _                         => throw new ArgumentOutOfRangeException(),
         };
 
-    public T MatchDuckOrNative<T>(Func<Duck, T> handleDuck, Func<TsType, T> handleNative)
+    public T MapDuckOrNative<T>(Func<Duck, T> handleDuck, Func<TsType, T> handleNative)
         => this switch
         {
             Duck duck     => handleDuck(duck),

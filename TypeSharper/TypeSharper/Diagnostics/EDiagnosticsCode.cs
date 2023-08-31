@@ -6,6 +6,7 @@ public enum EDiagnosticsCode
     TargetTypeHierarchyIsNotPartial,
     TaggedUnionTargetTypeIsNotAbstract,
     IntersectionOfTaggedUnionsIsNotSupported,
+    ProductOfTaggedUnionsIsNotSupported,
     TargetTypeSymbolHasError,
     PropertyDoesNotExist,
     TargetTypeIsNotARecord,

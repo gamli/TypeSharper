@@ -21,8 +21,7 @@ public abstract partial record TsType
         protected override Maybe<string> CsBody(TsModel model)
             => $$"""
                 {
-                {{TypesToIntersect.Select(CsConstituentTypeCtor).JoinLines().Indent()}}
-                {{TypesToIntersect.Select(CsConstituentTypeCastOperator).JoinLines().Indent()}}
+                {{TypesToIntersect.Select(CsConstituentTypeCastAndCtor).JoinLines().Indent()}}
                 }
                 """;
 
@@ -30,31 +29,37 @@ public abstract partial record TsType
 
         #region Private
 
-        private string CsConstituentTypeCtor(TsTypeRef type)
+        private string CsConstituentTypeCastAndCtor(TsTypeRef type)
         {
             var csTypeName = Info.Name.Cs();
             var csFromTypeName = type.Cs();
-            return Props.Any()
-                ? $$"""
-                public {{csTypeName}}({{csFromTypeName}} from)
-                : this({{Props.Select(prop => prop.CsGetFrom("from")).JoinList()}}) { }
-                """
-                : $$"""
-                public {{csTypeName}}({{csFromTypeName}} _) { }
-                """;
-        }
-
-        private string CsConstituentTypeCastOperator(TsTypeRef type)
-            => $$"""
+            var csCast =
+                $$"""
                 public static implicit operator {{Info.Name.Cs()}}({{type.Cs()}} from)
                     => new(from);
                 """;
+            var csCtor =
+                Props.Any()
+                    ? $$"""
+                    public {{csTypeName}}({{csFromTypeName}} from)
+                    : this({{Props.Select(prop => prop.CsGetFrom("from")).JoinList()}}) { }
+                    """
+                    : $$"""
+                    public {{csTypeName}}({{csFromTypeName}} _) { }
+                    """;
+            return $$"""
+                {{csCast}}
+                {{csCtor}}
+                """;
+        }
 
         #endregion
     }
 
     public record IntersectionAttr(TsUniqueList<TsTypeRef> TypesToIntersect) : TsAttr
     {
+        #region Protected
+
         protected override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
         {
             var unsupportedTypes =
@@ -80,8 +85,11 @@ public abstract partial record TsType
                     """,
                     targetTypeSymbol);
             }
+
             return Maybe<DiagnosticsError>.NONE;
         }
+
+        #endregion
     }
 
     #endregion

@@ -9,12 +9,28 @@ public static class TsTypeFactory
     public static TsType Create(TsType.TypeInfo info, TsAttr attr, TsModel model)
         => attr switch
         {
+            TsType.ProductAttr productAttr           => Create(info, productAttr, model),
             TsType.IntersectionAttr intersectionAttr => Create(info, intersectionAttr, model),
             TsType.OmittedAttr omittedAttr           => Create(info, omittedAttr, model),
             TsType.PickedAttr pickedAttr             => Create(info, pickedAttr, model),
             TsType.TaggedUnionAttr taggedUnionAttr   => Create(info, taggedUnionAttr, model),
             _                                        => throw new ArgumentOutOfRangeException(nameof(attr)),
         };
+
+    private static TsType Create(
+        TsType.TypeInfo info,
+        TsType.ProductAttr productAttr,
+        TsModel model)
+    {
+        var props =
+            TsUniqueList.CreateRange(
+                TsType.Product.FromTypesProps(productAttr.TypesToMultiply.Select(model.Resolve)).Select(t => t.prop));
+
+        return new TsType.Product(
+            info,
+            props,
+            productAttr.TypesToMultiply);
+    }
 
     public static TsType CreateNative(TsType.TypeInfo typeInfo, IEnumerable<TsProp> props)
         => new TsType.Native(typeInfo, TsUniqueList.Create(props));
