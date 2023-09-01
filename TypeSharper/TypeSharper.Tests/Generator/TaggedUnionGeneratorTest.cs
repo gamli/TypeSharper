@@ -8,6 +8,54 @@ namespace TypeSharper.Tests.Generator;
 public class TaggedUnionGeneratorTests
 {
     [Fact]
+    public void A_Map_method_is_generated_that_receives_handlers_for_each_type()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            [TsTaggedUnion<string>("StringCase", "EmptyCase")]
+            public abstract partial record UnionWithEmptyCase;
+            """,
+            // language=csharp
+            """
+            public void Map(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
+            {
+                switch (this)
+                {
+                    case StringCase c:
+                        handleStringCase(c.Value);
+                        break;
+                    case EmptyCase:
+                        handleEmptyCase();
+                        break;
+                }
+            }
+            """,
+            // language=csharp
+            """
+            public TReturn Map<TReturn>(System.Func<System.String, TReturn> handleStringCase, System.Func<TReturn> handleEmptyCase) => this switch
+            {
+                StringCase c => handleStringCase(c.Value),
+                EmptyCase => handleEmptyCase(),
+            };
+            """);
+
+    [Fact]
+    public void If_methods_are_generated_for_all_cases_that_receive_a_handler_for_the_case()
+        => GeneratorTest.ExpectOutput(
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+            [TsTaggedUnion<string>("StringCase", "EmptyCase")]
+            public abstract partial record UnionWithEmptyCase;
+            """,
+            // language=csharp
+            """
+            public Maybe<TReturn> IfStringCase<TReturn>(System.Func<System.String, TReturn> handleStringCase)
+                => this is StringCase c ? handleStringCase(c.Value) : Maybe<TReturn>.NONE;
+            """);
+
+    [Fact]
     public void Union_case_values_can_be_of_any_kind()
         => GeneratorTest.ExpectOutput(
             // language=csharp
@@ -103,7 +151,7 @@ public class TaggedUnionGeneratorTests
                     handleEmptyCase();
                     return Void.Instance;
                 }
-
+            
                 return Maybe<Void>.NONE;
             }
             """,
@@ -162,54 +210,5 @@ public class TaggedUnionGeneratorTests
             using TypeSharper.Attributes;
             [TsTaggedUnion<string, int, object>("s", "i", "o")]
             public partial record OneOfStringIntObject { }
-            """);
-    
-    [Fact]
-    public void If_methods_are_generated_for_all_cases_that_receive_a_handler_for_the_case()
-        => GeneratorTest.ExpectOutput(
-            // language=csharp
-            """
-            using TypeSharper.Attributes;
-            [TsTaggedUnion<string>("StringCase", "EmptyCase")]
-            public abstract partial record UnionWithEmptyCase;
-            """,
-            // language=csharp
-            """
-            public Maybe<TReturn> IfStringCase<TReturn>(System.Func<System.String, TReturn> handleStringCase)
-                => this is StringCase c ? handleStringCase(c.Value) : Maybe<TReturn>.NONE;
-            """);
-
-
-    [Fact]
-    public void A_Map_method_is_generated_that_receives_handlers_for_each_type()
-        => GeneratorTest.ExpectOutput(
-            // language=csharp
-            """
-            using TypeSharper.Attributes;
-            [TsTaggedUnion<string>("StringCase", "EmptyCase")]
-            public abstract partial record UnionWithEmptyCase;
-            """,
-            // language=csharp
-            """
-            public void Map(System.Action<System.String> handleStringCase, System.Action handleEmptyCase)
-            {
-                switch (this)
-                {
-                    case StringCase c:
-                        handleStringCase(c.Value);
-                        break;
-                    case EmptyCase:
-                        handleEmptyCase();
-                        break;
-                }
-            }
-            """,
-            // language=csharp
-            """
-            public TReturn Map<TReturn>(System.Func<System.String, TReturn> handleStringCase, System.Func<TReturn> handleEmptyCase) => this switch
-            {
-                StringCase c => handleStringCase(c.Value),
-                EmptyCase => handleEmptyCase(),
-            };
             """);
 }

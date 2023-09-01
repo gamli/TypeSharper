@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TypeSharper.Model.Mod;
@@ -12,8 +11,6 @@ public record TsTypeRef : IComparable<TsTypeRef>
     public TsArrayMod ArrayMod { get; init; }
     public TsQualifiedName Name { get; init; }
     public TsList<TsTypeRef> TypeArguments { get; init; }
-
-    public static TsTypeRef Parse(string csTypeRef) => FromTypeSyntax(SyntaxFactory.ParseTypeName(csTypeRef));
 
     public static TsTypeRef FromTypeSyntax(TypeSyntax typeSyntax)
         => typeSyntax switch
@@ -31,6 +28,8 @@ public record TsTypeRef : IComparable<TsTypeRef>
                 new TsArrayMod(false),
                 new TsList<TsTypeRef>()),
         };
+
+    public static TsTypeRef Parse(string csTypeRef) => FromTypeSyntax(SyntaxFactory.ParseTypeName(csTypeRef));
 
     public static TsTypeRef WithNs(TsQualifiedName ns, TsQualifiedName name)
         => WithNs(ns, name, TsList<TsTypeRef>.Empty);
@@ -56,13 +55,13 @@ public record TsTypeRef : IComparable<TsTypeRef>
 
     public TsTypeRef AddId(TsName name) => this with { Name = Name.Add(name) };
 
+    public int CompareTo(TsTypeRef other)
+        => string.Compare(Cs(), other.Cs(), StringComparison.InvariantCultureIgnoreCase);
+
     public string Cs()
         => Name.Cs()
            + (TypeArguments.Any() ? $"<{TypeArguments.Select(typeRef => typeRef.Cs()).JoinList()}>" : "")
            + ArrayMod.Cs();
-
-    public int CompareTo(TsTypeRef other)
-        => string.Compare(Cs(), other.Cs(), StringComparison.InvariantCultureIgnoreCase);
 
     public override string ToString() => Cs();
 

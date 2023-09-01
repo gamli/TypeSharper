@@ -15,6 +15,22 @@ public abstract partial record TsType
             TsUniqueList<TsTypeRef> TypesToMultiply)
         : PropertyDuck(Info, Props)
     {
+        public static IEnumerable<(TsType type, TsProp prop)> FromTypesProps(IEnumerable<TsType> fromTypes)
+            => fromTypes
+               .Select(
+                   type => type.MapPropertyDuck(
+                       propertyDuck => new { type, propertyDuck.Props },
+                       _ => null!,
+                       native => new { type, native.Props }))
+               .Where(typeProps => typeProps is not null)
+               .SelectMany(
+                   typeProps
+                       => typeProps.Props.Select(prop => (typeProps.type, prop)));
+
+        public override string ToString() => $"Product:{base.ToString()}";
+
+        #region Protected
+
         protected override Maybe<string> CsBody(TsModel model)
             => $$"""
                 {
@@ -22,8 +38,7 @@ public abstract partial record TsType
                 }
                 """;
 
-        public override string ToString() => $"Product:{base.ToString()}";
-
+        #endregion
 
         #region Private
 
@@ -46,34 +61,13 @@ public abstract partial record TsType
                 """;
         }
 
-        public static IEnumerable<(TsType type, TsProp prop)> FromTypesProps(IEnumerable<TsType> fromTypes)
-            => fromTypes
-               .Select(
-                   type => type.MapPropertyDuck(
-                       propertyDuck => new { type, propertyDuck.Props },
-                       _ => null!,
-                       native => new { type, native.Props }))
-               .Where(typeProps => typeProps is not null)
-               .SelectMany(
-                   typeProps
-                       => typeProps.Props.Select(prop => (typeProps.type, prop)));
-
         #endregion
     }
 
     public record ProductAttr(TsUniqueList<TsTypeRef> TypesToMultiply, TsList<TsPropMapping> PropMappings)
         : TsPropertyDuckAttr(PropMappings)
     {
-        protected override IEnumerable<TsName> PropNames(TsModel model)
-            => TypesToMultiply
-               .SelectMany(
-                   type => model
-                           .Resolve(type)
-                           .MapPropertyDuck(
-                               propertyDuck => propertyDuck.Props,
-                               _ => TsUniqueList.Create<TsProp>(),
-                               native => native.Props))
-               .Select(prop => prop.Name);
+        #region Protected
 
         protected override Maybe<DiagnosticsError> DoDoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
         {
@@ -101,6 +95,19 @@ public abstract partial record TsType
 
             return Maybe<DiagnosticsError>.NONE;
         }
+
+        protected override IEnumerable<TsName> PropNames(TsModel model)
+            => TypesToMultiply
+               .SelectMany(
+                   type => model
+                           .Resolve(type)
+                           .MapPropertyDuck(
+                               propertyDuck => propertyDuck.Props,
+                               _ => TsUniqueList.Create<TsProp>(),
+                               native => native.Props))
+               .Select(prop => prop.Name);
+
+        #endregion
     }
 
     #endregion

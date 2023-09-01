@@ -44,8 +44,6 @@ public abstract record Maybe<T>
 
     public bool Map() => Map(_ => true, () => false);
 
-    public T MapSomeOr(T ifNone) => Map(some => some, ifNone);
-
     public TResult Map<TResult>(Func<T, TResult> ifSome, TResult ifNone) => Map(ifSome, () => ifNone);
 
     public TResult Map<TResult>(Func<T, TResult> ifSome, Func<TResult> ifNone)
@@ -56,6 +54,8 @@ public abstract record Maybe<T>
 
     public Maybe<TResult> Map<TResult>(Func<T, Maybe<TResult>> ifSome, Func<Maybe<TResult>> ifNone)
         => this is SomeCase some ? ifSome(some.Value) : ifNone();
+
+    public T MapSomeOr(T ifNone) => Map(some => some, ifNone);
 
     #region Private
 

@@ -10,7 +10,7 @@ public partial record CustomerLimit;
 
 public static class PickSample
 {
-    public static CustomerLimit Ctor(Customer customer) => new (customer);
+    public static CustomerLimit Ctor(Customer customer) => new(customer);
     public static CustomerLimit ImplicitCast(Customer customer) => customer;
 
     public static decimal SumOfCreditLimits(IEnumerable<CustomerLimit> customerLimits)

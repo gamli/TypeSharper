@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using TypeSharper.Model;
 using TypeSharper.Model.AttrDef;
 
 namespace TypeSharper.SemanticExtensions;

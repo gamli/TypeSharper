@@ -11,12 +11,13 @@ public abstract partial record TsType
         Maybe<TsTypeRef> ContainingType,
         TsNs Ns,
         EKind TypeKind,
-        TsTypeMods Mods): IComparable<TypeInfo>
+        TsTypeMods Mods) : IComparable<TypeInfo>
     {
-        public TsTypeRef Ref()
-            => ContainingType.Map(
-                ct => ct.AddId(Name),
-                () => TsTypeRef.WithNs(Ns.FullyQualifiedName, Name));
+        public int CompareTo(TypeInfo other)
+        {
+            var comparedMods = Mods.CompareTo(other.Mods);
+            return comparedMods != 0 ? comparedMods : Name.CompareTo(other.Name);
+        }
 
         public string Cs(string csBody, TsModel model)
         {
@@ -25,6 +26,13 @@ public abstract partial record TsType
                 typeRef => model.Resolve(typeRef).Info.Cs($"\n{{\n{inner.Indent()}\n}}", model),
                 () => inner);
         }
+
+        public TsTypeRef Ref()
+            => ContainingType.Map(
+                ct => ct.AddId(Name),
+                () => TsTypeRef.WithNs(Ns.FullyQualifiedName, Name));
+
+        #region Private
 
         private string CsKind()
             => TypeKind switch
@@ -37,11 +45,7 @@ public abstract partial record TsType
                 _                  => throw new ArgumentOutOfRangeException(nameof(TypeKind), TypeKind, null),
             };
 
-        public int CompareTo(TypeInfo other)
-        {
-            var comparedMods = Mods.CompareTo(other.Mods);
-            return comparedMods != 0 ? comparedMods : Name.CompareTo(other.Name);
-        }
+        #endregion
     }
 
     #endregion

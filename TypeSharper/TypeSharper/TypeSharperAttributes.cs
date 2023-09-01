@@ -8,6 +8,8 @@ namespace TypeSharper;
 
 public static class TypeSharperAttributes
 {
+    public const string MAPPINGS_ATTRIBUTE_PROP_NAME = "Mappings";
+
     public static IEnumerable<TsAttrDef> Attributes()
         => new[]
         {
@@ -42,13 +44,6 @@ public static class TypeSharperAttributes
     private const string _PICK_ATTRIBUTE_NAME = "TsPickAttribute";
     private const string _PRODUCT_ATTRIBUTE_NAME = "TsProductAttribute";
     private const string _TAGGED_UNION_ATTRIBUTE_NAME = "TsTaggedUnionAttribute";
-    public const string MAPPINGS_ATTRIBUTE_PROP_NAME = "Mappings";
-
-    private static TsAttrDef IntersectionAttributeDefinition()
-        => PropertyDuckAttributeDefinition(CompositeTypeAttributeDefinition(_INTERSECTION_ATTRIBUTE_NAME));
-
-    private static TsAttrDef ProductAttributeDefinition()
-        => PropertyDuckAttributeDefinition(CompositeTypeAttributeDefinition(_PRODUCT_ATTRIBUTE_NAME));
 
     private static TsAttrDef CompositeTypeAttributeDefinition(string attributeName)
         => new(
@@ -67,6 +62,15 @@ public static class TypeSharperAttributes
                                         .Range(0, parameterCount)
                                         .Select(parameterIdx => new TsName($"TType_{parameterIdx}")))))));
 
+    private static TsAttrDef IntersectionAttributeDefinition()
+        => PropertyDuckAttributeDefinition(CompositeTypeAttributeDefinition(_INTERSECTION_ATTRIBUTE_NAME));
+
+    private static TsAttrDef OmitAttributeDefinition() => PropertySelectionAttributeDefinition(_OMIT_ATTRIBUTE_NAME);
+    private static TsAttrDef PickAttributeDefinition() => PropertySelectionAttributeDefinition(_PICK_ATTRIBUTE_NAME);
+
+    private static TsAttrDef ProductAttributeDefinition()
+        => PropertyDuckAttributeDefinition(CompositeTypeAttributeDefinition(_PRODUCT_ATTRIBUTE_NAME));
+
     private static TsAttrDef PropertyDuckAttributeDefinition(TsAttrDef attrDef)
         => attrDef with
         {
@@ -74,27 +78,26 @@ public static class TypeSharperAttributes
                 overloadDef => overloadDef with
                 {
                     NamedParameters = overloadDef.NamedParameters.Add(
-                        new TsAttrOverloadDef.Param(TsTypeRef.WithoutNsArray("string"), MAPPINGS_ATTRIBUTE_PROP_NAME)),
+                        new TsAttrOverloadDef.Param(
+                            TsTypeRef.WithoutNsArray("string"),
+                            MAPPINGS_ATTRIBUTE_PROP_NAME)),
                 }),
         };
 
     private static TsAttrDef PropertySelectionAttributeDefinition(string attributeName)
         => PropertyDuckAttributeDefinition(
-            new(
-            attributeName,
-            AttributeTargets.Class | AttributeTargets.Struct,
-            TsList.Create(
-                new TsAttrOverloadDef(
-                    TsList.Create(
-                        new TsAttrOverloadDef.Param(
-                            TsTypeRef.WithNsArray("System", "String"),
-                            "memberNames",
-                            true)),
-                    TsList<TsAttrOverloadDef.Param>.Empty,
-                    TsList.Create(new TsName("TFromType"))))));
-
-    private static TsAttrDef OmitAttributeDefinition() => PropertySelectionAttributeDefinition(_OMIT_ATTRIBUTE_NAME);
-    private static TsAttrDef PickAttributeDefinition() => PropertySelectionAttributeDefinition(_PICK_ATTRIBUTE_NAME);
+            new TsAttrDef(
+                attributeName,
+                AttributeTargets.Class | AttributeTargets.Struct,
+                TsList.Create(
+                    new TsAttrOverloadDef(
+                        TsList.Create(
+                            new TsAttrOverloadDef.Param(
+                                TsTypeRef.WithNsArray("System", "String"),
+                                "memberNames",
+                                true)),
+                        TsList<TsAttrOverloadDef.Param>.Empty,
+                        TsList.Create(new TsName("TFromType"))))));
 
     private static TsAttrDef TaggedUnionAttributeDefinition()
         => new(

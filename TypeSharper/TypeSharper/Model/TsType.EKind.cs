@@ -2,6 +2,8 @@ namespace TypeSharper.Model;
 
 public abstract partial record TsType
 {
+    #region Nested types
+
     public enum EKind
     {
         Interface,
@@ -11,4 +13,6 @@ public abstract partial record TsType
         RecordStruct,
         Special,
     }
+
+    #endregion
 }

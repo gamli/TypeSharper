@@ -1,11 +1,23 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace TypeSharper.Model;
 
 public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType>
 {
+    public abstract string Cs(TsModel model);
+
+    public static TsUniqueList<TsProp> FromTypeProperties(
+        TsTypeRef fromType,
+        TsModel model)
+        => model
+           .Resolve(fromType)
+           .MapPropertyDuck(
+               propertyDuck => propertyDuck.Props,
+               _ => TsUniqueList.Create<TsProp>(),
+               native => native.Props);
+
+    public int CompareTo(TsType other) => Info.CompareTo(other.Info);
+
     public string CsFile(TsModel model)
         => $$"""
             {{Info.Ns.CsFileScoped()}}
@@ -13,12 +25,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
             {{Cs(model)}}
             """;
 
-    public abstract string Cs(TsModel model);
-
     public Maybe<T> IfDuck<T>(Func<Duck, T> handleDuck) => this is Duck duck ? handleDuck(duck) : Maybe<T>.NONE;
-
-    public Maybe<T> IfProduct<T>(Func<Product, T> handleProduct)
-        => this is Product product ? handleProduct(product) : Maybe<T>.NONE;
 
     public Maybe<T> IfIntersection<T>(Func<Intersection, T> handleIntersection)
         => this is Intersection intersection ? handleIntersection(intersection) : Maybe<T>.NONE;
@@ -31,6 +38,9 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
 
     public Maybe<T> IfPicked<T>(Func<Picked, T> handlePicked)
         => this is Picked picked ? handlePicked(picked) : Maybe<T>.NONE;
+
+    public Maybe<T> IfProduct<T>(Func<Product, T> handleProduct)
+        => this is Product product ? handleProduct(product) : Maybe<T>.NONE;
 
     public Maybe<T> IfPropertyDuck<T>(Func<PropertyDuck, T> handlePropertyDuck)
         => this is PropertyDuck propertyDuck ? handlePropertyDuck(propertyDuck) : Maybe<T>.NONE;
@@ -61,6 +71,26 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
             _                         => throw new ArgumentOutOfRangeException(),
         };
 
+    public T MapDuckOrNative<T>(Func<Duck, T> handleDuck, Func<TsType, T> handleNative)
+        => this switch
+        {
+            Duck duck     => handleDuck(duck),
+            Native native => handleNative(native),
+            _             => throw new ArgumentOutOfRangeException(),
+        };
+
+    public T MapPropertyDuck<T>(
+        Func<PropertyDuck, T> handlePropertyDuck,
+        Func<TaggedUnion, T> handleTaggedUnion,
+        Func<Native, T> handleNative)
+        => this switch
+        {
+            PropertyDuck propertyDuck => handlePropertyDuck(propertyDuck),
+            TaggedUnion taggedUnion   => handleTaggedUnion(taggedUnion),
+            Native native             => handleNative(native),
+            _                         => throw new ArgumentOutOfRangeException(),
+        };
+
     public T MapPropertySelection<T>(
         Func<PropertySelection, T> handlePropertySelection,
         Func<Intersection, T> handleIntersection,
@@ -77,36 +107,5 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
             _                                   => throw new ArgumentOutOfRangeException(),
         };
 
-    public T MapPropertyDuck<T>(
-        Func<PropertyDuck, T> handlePropertyDuck,
-        Func<TaggedUnion, T> handleTaggedUnion,
-        Func<Native, T> handleNative)
-        => this switch
-        {
-            PropertyDuck propertyDuck => handlePropertyDuck(propertyDuck),
-            TaggedUnion taggedUnion   => handleTaggedUnion(taggedUnion),
-            Native native             => handleNative(native),
-            _                         => throw new ArgumentOutOfRangeException(),
-        };
-
-    public T MapDuckOrNative<T>(Func<Duck, T> handleDuck, Func<TsType, T> handleNative)
-        => this switch
-        {
-            Duck duck     => handleDuck(duck),
-            Native native => handleNative(native),
-            _             => throw new ArgumentOutOfRangeException(),
-        };
-
     public TsTypeRef Ref() => Info.Ref();
-    public int CompareTo(TsType other) => Info.CompareTo(other.Info);
-
-    public static TsUniqueList<TsProp> FromTypeProperties(
-        TsTypeRef fromType,
-        TsModel model)
-        => model
-           .Resolve(fromType)
-           .MapPropertyDuck(
-               propertyDuck => propertyDuck.Props,
-               _ => TsUniqueList.Create<TsProp>(),
-               native => native.Props);
 }

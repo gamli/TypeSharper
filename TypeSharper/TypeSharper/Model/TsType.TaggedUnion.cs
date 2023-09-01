@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.CodeAnalysis;
 using TypeSharper.Diagnostics;
 
@@ -6,22 +5,6 @@ namespace TypeSharper.Model;
 
 public abstract partial record TsType
 {
-    public record TaggedUnionAttr(TsUniqueList<TsName> CaseNames, TsList<TsTypeRef> CaseTypes) : TsAttr
-    {
-        protected override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
-            => !targetTypeSymbol.IsAbstract
-                ? new DiagnosticsError(
-                    EDiagnosticsCode.TaggedUnionTargetTypeIsNotAbstract,
-                    targetTypeSymbol,
-                    "The type {0} must be abstract in order to be a tagged union type."
-                    + " A tagged union type must never be created directly but only through the factory functions"
-                    + " that generated the private sealed case types."
-                    + " This way TypeSharper makes sure that there can be no further subclasses of {0} and thus the"
-                    + " matching is exhaustive.",
-                    targetTypeSymbol)
-                : Maybe<DiagnosticsError>.NONE;
-    }
-
     #region Nested types
 
     public sealed record TaggedUnion(TypeInfo Info, TsUniqueList<TaggedUnion.Case> Cases) : Duck(Info)
@@ -41,11 +24,7 @@ public abstract partial record TsType
 
         public override string ToString() => $"TaggedUnion:{base.ToString()}";
 
-        private string CsMatchMethods()
-            => $$"""
-                {{CsMatchMethod(true)}}
-                {{CsMatchMethod(false)}}
-                """;
+        #region Private
 
         private string CsMatchMethod(bool handlerHasReturnValue)
         {
@@ -87,10 +66,38 @@ public abstract partial record TsType
                 """;
         }
 
+        private string CsMatchMethods()
+            => $$"""
+                {{CsMatchMethod(true)}}
+                {{CsMatchMethod(false)}}
+                """;
+
+        #endregion
+
         #region Nested types
 
         public record Case(TsName Name, Maybe<TsTypeRef> ValueType)
         {
+            public string CsIfMethods()
+                => $$"""
+                    {{CsIfMethod(true)}}
+                    {{CsIfMethod(false)}}
+                    """;
+
+            public string CsMatchMethodParam(bool handlerHasReturnValue)
+                => ValueType.Map(
+                    typeRef => handlerHasReturnValue
+                        ? // language=C#
+                        $"System.Func<{typeRef.Cs()}, TReturn> handle{Name}"
+                        : // language=C#
+                        $"System.Action<{typeRef.Cs()}> handle{Name}",
+                    // language=C#
+                    () => handlerHasReturnValue
+                        ? // language=C#
+                        $"System.Func<TReturn> handle{Name}"
+                        : // language=C#
+                        $"System.Action handle{Name}");
+
             public string CsMatchMethodSwitchCase(bool handlerHasReturnValue)
                 => ValueType.Map(
                     _ => handlerHasReturnValue
@@ -120,29 +127,9 @@ public abstract partial record TsType
                     // language=C#
                     () => $"public sealed record {Name} : {unionTypeInfo.Name.Cs()};");
 
-            public string CsIfMethods()
-                => $$"""
-                    {{CsIfMethod(true)}}
-                    {{CsIfMethod(false)}}
-                    """;
-
             public TsTypeRef TypeRef() => TsTypeRef.WithoutNs(Name);
 
             #region Private
-
-            public string CsMatchMethodParam(bool handlerHasReturnValue)
-                => ValueType.Map(
-                    typeRef => handlerHasReturnValue
-                        ? // language=C#
-                        $"System.Func<{typeRef.Cs()}, TReturn> handle{Name}"
-                        : // language=C#
-                        $"System.Action<{typeRef.Cs()}> handle{Name}",
-                    // language=C#
-                    () => handlerHasReturnValue
-                        ? // language=C#
-                        $"System.Func<TReturn> handle{Name}"
-                        : // language=C#
-                        $"System.Action handle{Name}");
 
             private string CsIfMethod(bool handlerHasReturnValue)
                 => ValueType.Map(
@@ -186,6 +173,26 @@ public abstract partial record TsType
 
             #endregion
         }
+
+        #endregion
+    }
+
+    public record TaggedUnionAttr(TsUniqueList<TsName> CaseNames, TsList<TsTypeRef> CaseTypes) : TsAttr
+    {
+        #region Protected
+
+        protected override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
+            => !targetTypeSymbol.IsAbstract
+                ? new DiagnosticsError(
+                    EDiagnosticsCode.TaggedUnionTargetTypeIsNotAbstract,
+                    targetTypeSymbol,
+                    "The type {0} must be abstract in order to be a tagged union type."
+                    + " A tagged union type must never be created directly but only through the factory functions"
+                    + " that generated the private sealed case types."
+                    + " This way TypeSharper makes sure that there can be no further subclasses of {0} and thus the"
+                    + " matching is exhaustive.",
+                    targetTypeSymbol)
+                : Maybe<DiagnosticsError>.NONE;
 
         #endregion
     }

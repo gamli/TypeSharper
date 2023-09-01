@@ -8,11 +8,11 @@ public abstract partial record TsType
 
     public sealed record Native(TypeInfo Info, TsUniqueList<TsProp> Props) : TsType(Info)
     {
-        public override string ToString() => $"Native:{base.ToString()}";
-
         public override string Cs(TsModel model)
             => throw new NotSupportedException(
                 "Native types are only intended to read from. Use Ducks for generation.");
+
+        public override string ToString() => $"Native:{base.ToString()}";
     }
 
     #endregion

@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
@@ -40,12 +39,6 @@ public class DiagnosticsError
         _messageFormat = messageFormat;
     }
 
-    private readonly EDiagnosticsCode _diagnosticsCode;
-    private readonly Location? _location;
-    private readonly object[] _messageArgs;
-    private readonly string _messageFormat;
-    private readonly ISymbol? _symbol;
-
     public void Report(SourceProductionContext context)
     {
         var diagnosticDescriptor =
@@ -60,4 +53,14 @@ public class DiagnosticsError
         context.ReportDiagnostic(
             Diagnostic.Create(diagnosticDescriptor, _location ?? _symbol?.Locations.FirstOrDefault(), _messageArgs));
     }
+
+    #region Private
+
+    private readonly EDiagnosticsCode _diagnosticsCode;
+    private readonly Location? _location;
+    private readonly object[] _messageArgs;
+    private readonly string _messageFormat;
+    private readonly ISymbol? _symbol;
+
+    #endregion
 }

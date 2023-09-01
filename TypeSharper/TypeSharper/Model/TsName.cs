@@ -7,6 +7,9 @@ public record TsName(string Value) : IComparable<TsName>
     public static implicit operator TsName(string value) => new(value);
     public TsName Capitalize() => new(Cs().Capitalize());
 
+    public int CompareTo(TsName other)
+        => string.Compare(Value, other.Value, StringComparison.InvariantCultureIgnoreCase);
+
     public string Cs() => Value;
     public override string ToString() => Cs();
 
@@ -26,9 +29,6 @@ public record TsName(string Value) : IComparable<TsName>
 
         return Value == other.Value;
     }
-
-    public int CompareTo(TsName other)
-        => string.Compare(Value, other.Value, StringComparison.InvariantCultureIgnoreCase);
 
     public override int GetHashCode() => Value.GetHashCode();
 

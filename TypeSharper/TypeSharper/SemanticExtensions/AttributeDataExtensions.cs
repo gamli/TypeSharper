@@ -65,6 +65,8 @@ public static class AttributeDataExtensions
                     TsList.CreateRange(typeArgs)));
     }
 
+    #region Private
+
     private static TsList<TsType.TsPropMapping> PropMappings(IReadOnlyDictionary<TsName, string[]> namedArgs)
         => namedArgs.ContainsKey(TypeSharperAttributes.MAPPINGS_ATTRIBUTE_PROP_NAME)
             ? TsList.Create(
@@ -75,4 +77,6 @@ public static class AttributeDataExtensions
                             new TsName(t.first),
                             TsTypeRef.Parse(t.second ?? "object"))))
             : TsList<TsType.TsPropMapping>.Empty;
+
+    #endregion
 }

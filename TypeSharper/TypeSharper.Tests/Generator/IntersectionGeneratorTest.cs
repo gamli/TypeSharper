@@ -7,25 +7,6 @@ namespace TypeSharper.Tests.Generator;
 public class IntersectionGeneratorTests
 {
     [Fact]
-    public void Intersecting_tagged_union_types_is_an_error()
-        => GeneratorTest.Fail(
-            EDiagnosticsCode.IntersectionOfTaggedUnionsIsNotSupported,
-            // ReSharper disable once HeapView.ObjectAllocation
-            // language=csharp
-            """
-            using TypeSharper.Attributes;
-
-            [TsTaggedUnionAttribute<int, string>("AnInt", "AString")]
-            public abstract partial record FirstUnion { }
-
-            [TsTaggedUnionAttribute<bool>("ABool", "Empty")]
-            public abstract partial record SecondUnion { }
-            
-            [TsIntersection<FirstUnion, SecondUnion>()]
-            public partial record IntersectionTarget { }
-            """);
-    
-    [Fact]
     public void Intersecting_many_types_produces_a_type_with_properties_present_in_all()
     {
         const int TYPE_COUNT = 10;
@@ -98,6 +79,25 @@ public class IntersectionGeneratorTests
             // language=csharp
             """
             public partial record IntersectionTarget(System.Int32 A, System.Int32 B)
+            """);
+
+    [Fact]
+    public void Intersecting_tagged_union_types_is_an_error()
+        => GeneratorTest.Fail(
+            EDiagnosticsCode.IntersectionOfTaggedUnionsIsNotSupported,
+            // ReSharper disable once HeapView.ObjectAllocation
+            // language=csharp
+            """
+            using TypeSharper.Attributes;
+
+            [TsTaggedUnionAttribute<int, string>("AnInt", "AString")]
+            public abstract partial record FirstUnion { }
+
+            [TsTaggedUnionAttribute<bool>("ABool", "Empty")]
+            public abstract partial record SecondUnion { }
+
+            [TsIntersection<FirstUnion, SecondUnion>()]
+            public partial record IntersectionTarget { }
             """);
 
     [Fact]

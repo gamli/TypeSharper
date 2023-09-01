@@ -45,16 +45,16 @@
     <ItemGroup Label="Embedded Support Code">
         <EmbeddedResource Include="../TypeSharper.Support/Maybe.cs" LogicalName="Support.Maybe.cs"/>
         <EmbeddedResource Include="../TypeSharper.Support/Void.cs" LogicalName="Support.Void.cs"/>
-        <None Include="README.md" Pack="true" PackagePath="" />
-        <None Remove="nuget-package\TypeSharper.0.1.5.symbols.nupkg" />
-        <None Remove="nuget-package\TypeSharper.0.1.5.nupkg" />
+        <None Include="README.md" Pack="true" PackagePath=""/>
+        <None Remove="nuget-package\TypeSharper.0.1.5.symbols.nupkg"/>
+        <None Remove="nuget-package\TypeSharper.0.1.5.nupkg"/>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
-        <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" />
-        <None Include="README.md" Pack="true" PackagePath="" />
-        <None Include="logo.svg" Pack="true" PackagePath="" />
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs"/>
+        <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs"/>
+        <None Include="README.md" Pack="true" PackagePath=""/>
+        <None Include="logo.svg" Pack="true" PackagePath=""/>
     </ItemGroup>
 
 

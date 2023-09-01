@@ -17,6 +17,9 @@ public record TsQualifiedName(TsList<TsName> Parts) : IComparable<TsQualifiedNam
     public TsQualifiedName Add(TsName name) => new(Parts.Add(name));
     public TsQualifiedName Append(TsQualifiedName name) => new(Parts.Concat(name.Parts));
 
+    public int CompareTo(TsQualifiedName other)
+        => string.Compare(Cs(), other.Cs(), StringComparison.InvariantCultureIgnoreCase);
+
     public string Cs() => string.Join(".", Parts.Select(name => name.Cs()));
     public override string ToString() => Cs();
 
@@ -36,9 +39,6 @@ public record TsQualifiedName(TsList<TsName> Parts) : IComparable<TsQualifiedNam
 
         return Parts.Equals(other.Parts);
     }
-
-    public int CompareTo(TsQualifiedName other)
-        => string.Compare(Cs(), other.Cs(), StringComparison.InvariantCultureIgnoreCase);
 
     public override int GetHashCode() => Parts.GetHashCode();
 

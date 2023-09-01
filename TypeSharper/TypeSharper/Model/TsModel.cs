@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace TypeSharper.Model;
 
 public record TsModel(TsDict<TsTypeRef, TsType> TypeDict, TsDict<TsTypeRef, TsType> GeneratedTypeDict)

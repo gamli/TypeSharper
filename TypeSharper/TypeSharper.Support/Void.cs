@@ -2,6 +2,11 @@ namespace TypeSharper;
 
 public record Void
 {
+    public static Void Instance = new();
+
+    #region Private
+
     private Void() { }
-    public static Void Instance = new ();
+
+    #endregion
 }

@@ -35,7 +35,10 @@ public static class GeneratorTest
         var result = Succeed(input);
 
         var userGeneratedFiles =
-            result.GeneratedTrees.Where(tree => !tree.FilePath.EndsWith("Attribute.g.cs") && !tree.FilePath.Contains("Support/")).ToList();
+            result
+                .GeneratedTrees
+                .Where(tree => !tree.FilePath.EndsWith("Attribute.g.cs") && !tree.FilePath.Contains("Support/"))
+                .ToList();
 
         userGeneratedFiles.Should().HaveSameCount(expectedFiles);
 

@@ -15,6 +15,19 @@ public abstract partial record TsType
             TsUniqueList<TsProp> Props)
         : PropertyDuck(Info, Props)
     {
+        public static TsUniqueList<TsProp> PropsPresentInAllTypes(TsUniqueList<TsTypeRef> types, TsModel model)
+        {
+            var props =
+                types
+                    .Select(type => FromTypeProperties(type, model))
+                    .ToList();
+            return props
+                   .First()
+                   .Where(
+                       candidateProp =>
+                           props.All(ps => ps.Any(p => p.Name == candidateProp.Name)));
+        }
+
         public override string ToString() => $"Intersection:{base.ToString()}";
 
         #region Protected
@@ -55,19 +68,6 @@ public abstract partial record TsType
         }
 
         #endregion
-
-        public static TsUniqueList<TsProp> PropsPresentInAllTypes(TsUniqueList<TsTypeRef> types, TsModel model)
-        {
-            var props =
-                types
-                    .Select(type => FromTypeProperties(type, model))
-                    .ToList();
-            return props
-                   .First()
-                   .Where(
-                       candidateProp =>
-                           props.All(ps => ps.Any(p => p.Name == candidateProp.Name)));
-        }
     }
 
     public record IntersectionAttr(
@@ -76,9 +76,6 @@ public abstract partial record TsType
         : TsPropertyDuckAttr(PropMappings)
     {
         #region Protected
-
-        protected override IEnumerable<TsName> PropNames(TsModel model)
-            => Intersection.PropsPresentInAllTypes(TypesToIntersect, model).Select(prop => prop.Name);
 
         protected override Maybe<DiagnosticsError> DoDoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
         {
@@ -108,6 +105,9 @@ public abstract partial record TsType
 
             return Maybe<DiagnosticsError>.NONE;
         }
+
+        protected override IEnumerable<TsName> PropNames(TsModel model)
+            => Intersection.PropsPresentInAllTypes(TypesToIntersect, model).Select(prop => prop.Name);
 
         #endregion
     }

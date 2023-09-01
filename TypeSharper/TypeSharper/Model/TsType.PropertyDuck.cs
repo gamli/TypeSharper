@@ -7,6 +7,8 @@ namespace TypeSharper.Model;
 
 public abstract partial record TsType
 {
+    #region Nested types
+
     public abstract record PropertyDuck(TypeInfo Info, TsUniqueList<TsProp> Props) : Duck(Info)
     {
         public override string Cs(TsModel model)
@@ -15,9 +17,12 @@ public abstract partial record TsType
                 + CsBody(model).Map(csBody => $"\n{csBody}", () => ";"),
                 model);
 
+        #region Protected
+
         protected abstract Maybe<string> CsBody(TsModel model);
+
+        #endregion
     }
-    public record TsPropMapping(TsName PropName, TsTypeRef MappedPropType);
 
     public abstract record TsPropertyDuckAttr(TsList<TsPropMapping> PropMappings) : TsAttr
     {
@@ -29,11 +34,20 @@ public abstract partial record TsType
                     ? prop with { Type = mapping.MappedPropType }
                     : prop);
         }
-        
+
+        #region Protected
+
+        protected abstract Maybe<DiagnosticsError> DoDoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model);
+
+        protected abstract IEnumerable<TsName> PropNames(TsModel model);
+
         protected sealed override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
             => RunAllMappedPropertiesMustExistDiagnostic(targetTypeSymbol, model)
                 .IfNone(() => DoDoRunDiagnostics(targetTypeSymbol, model));
 
+        #endregion
+
+        #region Private
 
         private Maybe<DiagnosticsError> RunAllMappedPropertiesMustExistDiagnostic(
             ISymbol targetTypeSymbol,
@@ -60,7 +74,10 @@ public abstract partial record TsType
                 : Maybe<DiagnosticsError>.NONE;
         }
 
-        protected abstract IEnumerable<TsName> PropNames(TsModel model);
-        protected abstract Maybe<DiagnosticsError> DoDoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model);
+        #endregion
     }
+
+    public record TsPropMapping(TsName PropName, TsTypeRef MappedPropType);
+
+    #endregion
 }

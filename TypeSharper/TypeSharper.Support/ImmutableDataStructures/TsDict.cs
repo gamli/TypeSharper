@@ -35,8 +35,8 @@ public record TsDict<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> whe
     public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _dictionary.GetEnumerator();
     public TsDict<TKey, TValue> Remove(TKey key) => new(_dictionary.Remove(key));
     public TsDict<TKey, TValue> Set(TKey key, TValue value) => new(_dictionary.SetItem(key, value));
-    public TsDict<TKey, TValue> Update(TKey key, Func<TValue, TValue> updateValue) => Set(key, updateValue(this[key]));
     public bool TryGetValue(TKey key, out TValue value) => _dictionary.TryGetValue(key, out value!);
+    public TsDict<TKey, TValue> Update(TKey key, Func<TValue, TValue> updateValue) => Set(key, updateValue(this[key]));
 
     #region Private
 

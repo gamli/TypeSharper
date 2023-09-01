@@ -22,7 +22,7 @@ public abstract partial record TsType
                 """;
 
         #endregion
-        
+
         #region Private
 
         private static string CsCastsAndCtors(TsTypeRef fromTypeRef, PropertyDuck selfType, TsModel model)
@@ -39,8 +39,6 @@ public abstract partial record TsType
         #endregion
     }
 
-    #endregion
-
 
     public record TsPropertySelectionAttr(
             TsTypeRef FromType,
@@ -48,13 +46,21 @@ public abstract partial record TsType
             TsList<TsPropMapping> PropMappings)
         : TsPropertyDuckAttr(PropMappings)
     {
+        #region Protected
+
         protected override Maybe<DiagnosticsError> DoDoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
             => RunAllSelectedPropertiesMustExistDiagnostic(targetTypeSymbol, model);
 
         protected override IEnumerable<TsName> PropNames(TsModel model)
             => FromTypeProperties(FromType, model).Select(prop => prop.Name);
 
-        private Maybe<DiagnosticsError> RunAllSelectedPropertiesMustExistDiagnostic(ISymbol targetTypeSymbol, TsModel model)
+        #endregion
+
+        #region Private
+
+        private Maybe<DiagnosticsError> RunAllSelectedPropertiesMustExistDiagnostic(
+            ISymbol targetTypeSymbol,
+            TsModel model)
         {
             var fromTypeProps = TsHashSet.Create(PropNames(model));
             return SelectedProperties.Any(prop => !fromTypeProps.Contains(prop))
@@ -73,5 +79,9 @@ public abstract partial record TsType
                     targetTypeSymbol)
                 : Maybe<DiagnosticsError>.NONE;
         }
+
+        #endregion
     }
+
+    #endregion
 }

@@ -6,6 +6,3 @@ public static class TypeSyntaxExtensions
     // public static TsNs ToNs(this TypeSyntax typeSyntax) => TsNs.Dotted(typeSyntax.);
     // public static TsQualifiedName ToQualifiedName(this TypeSyntax typeSyntax) => new TsTypeRef();
 }
-
-
-

@@ -10,8 +10,6 @@ public static class StringExtensions
         => IfNotEmpty(str, left + str + right, str ?? "");
 
     public static string AddLeftIfNotEmpty(this string? str, string left = " ") => AddIfNotEmpty(str, left, "");
-
-    public static string Semicolon(this string? str) => str.AddRightIfNotEmpty(";");
     public static string AddRightIfNotEmpty(this string? str, string right = " ") => AddIfNotEmpty(str, "", right);
 
     public static string Capitalize(this string? str)
@@ -47,11 +45,7 @@ public static class StringExtensions
             : singleLine;
     }
 
-    public static string JoinPath(this IEnumerable<string> values)
-        => string.Join("/", values).AddRightIfNotEmpty("/");
-    
-    private static string JoinString(this IEnumerable<string> values, string separator)
-        => string.Join(separator, values);
+    public static string JoinPath(this IEnumerable<string> values) => string.Join("/", values).AddRightIfNotEmpty("/");
 
     public static string JoinTokens(this IEnumerable<string> tokens)
         => tokens.WhereNotNullOrWhitespace().JoinString(" ");
@@ -64,6 +58,15 @@ public static class StringExtensions
     public static string RepeatString(this string? str, int count)
         => string.IsNullOrEmpty(str) ? "" : str!.Repeat(count).JoinString("");
 
+    public static string Semicolon(this string? str) => str.AddRightIfNotEmpty(";");
+
     public static IEnumerable<string> WhereNotNullOrWhitespace(this IEnumerable<string> tokens)
         => tokens.Where(token => !string.IsNullOrWhiteSpace(token));
+
+    #region Private
+
+    private static string JoinString(this IEnumerable<string> values, string separator)
+        => string.Join(separator, values);
+
+    #endregion
 }

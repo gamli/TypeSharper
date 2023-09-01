@@ -12,7 +12,7 @@ public abstract record EitherOr<TEither, TOr>
 
     public EitherOr<TEither, TOr> IfEither(Func<TEither, EitherOr<TEither, TOr>> what)
         => Map<EitherOr<TEither, TOr>>(what, or => or);
-    
+
     public EitherOr<TResult, TOr> IfEither<TResult>(Func<TEither, TResult> what)
         => Map<EitherOr<TResult, TOr>>(either => what(either), or => or);
 

@@ -1,6 +1,5 @@
 using System;
 using TypeSharper.Attributes;
-using TypeSharper.Sample.SampleBaseTypes.Shape;
 
 namespace TypeSharper.Sample;
 

@@ -15,18 +15,18 @@ public static class TaggedUnionSample
             square => square.Size * square.Size,
             circle => Math.PI * circle.Radius * circle.Radius);
 
+    public static string AreaIfRoundThing(ShapeTaggedUnion shape)
+        => shape
+           .IfRoundThing(circle => circle.Radius * circle.Radius * Math.PI)
+           .IfSome(area => area + 9)
+           .Map(area => $"Area is {area}", () => "Not a Circle");
+
     public static ShapeTaggedUnion CreateFourCorners(Rect rect) => new ShapeTaggedUnion.FourCorners(rect);
 
     public static ShapeTaggedUnion CreateFourCornersAndEqualEdges(Square square)
         => new ShapeTaggedUnion.FourCornersAndEqualEdges(square);
 
     public static ShapeTaggedUnion CreateRoundThing(Circle circle) => new ShapeTaggedUnion.RoundThing(circle);
-
-    public static string AreaIfRoundThing(ShapeTaggedUnion shape)
-        => shape
-           .IfRoundThing(circle => circle.Radius * circle.Radius * Math.PI)
-           .IfSome(area => area + 9)
-           .Map(area => $"Area is {area}", () => "Not a Circle");
 }
 
 [TsTaggedUnion<bool>("Some", "None")]

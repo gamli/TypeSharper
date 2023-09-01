@@ -16,27 +16,13 @@ public abstract record TsAttr
            .IfNone(() => TargetTypeIsRecord(targetTypeSymbol))
            .IfNone(() => DoRunDiagnostics(targetTypeSymbol, model));
 
-    private static Maybe<DiagnosticsError> TargetTypeIsRecord(ITypeSymbol typeSymbol)
-        => typeSymbol.DeclaringSyntaxReferences.First().GetSyntax().Kind() is not SyntaxKind.RecordDeclaration
-            and not SyntaxKind.RecordStructDeclaration
-            ? new DiagnosticsError(
-                EDiagnosticsCode.TargetTypeIsNotARecord,
-                typeSymbol,
-                "The type {0} must be a record."
-                + " Currently only records are supported as target types for TypeSharper."
-                + " This might change in the future but currently this makes everything easier since only one syntax"
-                + " has to be supported.",
-                typeSymbol)
-            : Maybe<DiagnosticsError>.NONE;
+    #region Protected
 
-    private static Maybe<DiagnosticsError> TargetTypeIsErrorSymbol(ISymbol symbol)
-        => symbol is IErrorTypeSymbol
-            ? new DiagnosticsError(
-                EDiagnosticsCode.TargetTypeSymbolHasError,
-                symbol,
-                "The type {0} has some error. All errors must be resolved before code can be generated.",
-                symbol)
-            : Maybe<DiagnosticsError>.NONE;
+    protected abstract Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model);
+
+    #endregion
+
+    #region Private
 
     private static Maybe<DiagnosticsError> TargetTypeHierarchyIsNotPartial(ITypeSymbol typeSymbol)
         => typeSymbol.IsPartial()
@@ -51,5 +37,27 @@ public abstract record TsAttr
                 + " TypeSharper to generate a partial that implements the type.",
                 typeSymbol);
 
-    protected abstract Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model);
+    private static Maybe<DiagnosticsError> TargetTypeIsErrorSymbol(ISymbol symbol)
+        => symbol is IErrorTypeSymbol
+            ? new DiagnosticsError(
+                EDiagnosticsCode.TargetTypeSymbolHasError,
+                symbol,
+                "The type {0} has some error. All errors must be resolved before code can be generated.",
+                symbol)
+            : Maybe<DiagnosticsError>.NONE;
+
+    private static Maybe<DiagnosticsError> TargetTypeIsRecord(ITypeSymbol typeSymbol)
+        => typeSymbol.DeclaringSyntaxReferences.First().GetSyntax().Kind() is not SyntaxKind.RecordDeclaration
+            and not SyntaxKind.RecordStructDeclaration
+            ? new DiagnosticsError(
+                EDiagnosticsCode.TargetTypeIsNotARecord,
+                typeSymbol,
+                "The type {0} must be a record."
+                + " Currently only records are supported as target types for TypeSharper."
+                + " This might change in the future but currently this makes everything easier since only one syntax"
+                + " has to be supported.",
+                typeSymbol)
+            : Maybe<DiagnosticsError>.NONE;
+
+    #endregion
 }

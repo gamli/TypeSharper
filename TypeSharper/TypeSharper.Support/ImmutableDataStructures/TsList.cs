@@ -8,10 +8,10 @@ namespace TypeSharper;
 
 public static class TsList
 {
-    public static TsList<T> CreateRange<T>(IEnumerable<T> enumerable) => new(enumerable);
     public static TsList<T> Create<T>(IEnumerable<T> enumerable) => new(enumerable);
     public static TsList<T> Create<T>(params T[] elements) => new(elements);
     public static TsList<T> Create<T>() => new();
+    public static TsList<T> CreateRange<T>(IEnumerable<T> enumerable) => new(enumerable);
 }
 
 public record TsList<T> : IEnumerable<T>

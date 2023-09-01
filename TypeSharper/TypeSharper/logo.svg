@@ -17,7 +17,7 @@
                   font-size="36"
                   font-weight="700"
                   transform="translate(65 107.129665)"
-                  fill="#209bfa" 
+                  fill="#209bfa"
                   stroke="#bada55"
             >
                 <tspan y="0" letter-spacing="-10">{</tspan>

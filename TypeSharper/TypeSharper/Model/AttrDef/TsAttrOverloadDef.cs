@@ -7,8 +7,6 @@ public record TsAttrOverloadDef(
     TsList<TsAttrOverloadDef.Param> NamedParameters,
     TsList<TsName> TypeParameters)
 {
-    public record Param(TsTypeRef Type, TsName Name, bool IsParams = false);
-
     public string CsConstructor(TsName attrTypeName)
         => $$"""
             public {{attrTypeName.Cs()}}({{CtorParameters.Select(p => $"{CsParamsModifier(p).MarginRight()}{p.Type.Cs()} {p.Name.Cs()}").JoinList()}})
@@ -22,7 +20,8 @@ public record TsAttrOverloadDef(
             "\n",
             CtorParameters
                 .Concat(NamedParameters)
-                .Select(parameter => $"public {parameter.Type.Cs()} {parameter.Name.Cs().Capitalize()} {{ get; set; }}"));
+                .Select(
+                    parameter => $"public {parameter.Type.Cs()} {parameter.Name.Cs().Capitalize()} {{ get; set; }}"));
 
     public string CsTypeParameters()
         => TypeParameters.Count == 0
@@ -64,6 +63,12 @@ public record TsAttrOverloadDef(
             return hashCode;
         }
     }
+
+    #endregion
+
+    #region Nested types
+
+    public record Param(TsTypeRef Type, TsName Name, bool IsParams = false);
 
     #endregion
 }

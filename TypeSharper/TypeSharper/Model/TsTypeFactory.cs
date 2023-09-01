@@ -17,6 +17,11 @@ public static class TsTypeFactory
             _                                        => throw new ArgumentOutOfRangeException(nameof(attr)),
         };
 
+    public static TsType CreateNative(TsType.TypeInfo typeInfo, IEnumerable<TsProp> props)
+        => new TsType.Native(typeInfo, TsUniqueList.Create(props));
+
+    #region Private
+
     private static TsType Create(
         TsType.TypeInfo info,
         TsType.ProductAttr productAttr,
@@ -35,11 +40,6 @@ public static class TsTypeFactory
             props,
             productAttr.TypesToMultiply);
     }
-
-    public static TsType CreateNative(TsType.TypeInfo typeInfo, IEnumerable<TsProp> props)
-        => new TsType.Native(typeInfo, TsUniqueList.Create(props));
-
-    #region Private
 
     private static TsType Create(
         TsType.TypeInfo info,
