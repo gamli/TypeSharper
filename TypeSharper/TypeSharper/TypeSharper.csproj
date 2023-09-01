@@ -1,34 +1,36 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
-        <IsPackable>true</IsPackable>
-        <Nullable>enable</Nullable>
-        <LangVersion>latest</LangVersion>
-
-        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-        <IsRoslynComponent>true</IsRoslynComponent>
-
         <RootNamespace>TypeSharper</RootNamespace>
         <PackageId>TypeSharper</PackageId>
-        
-        <Version>0.1.4</Version>
+        <Version>0.1.5</Version>
         <Authors>Markus Dibo</Authors>
+        <PackageProjectUrl>https://github.com/gamli/TypeSharper</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/gamli/TypeSharper</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>
             This source generator aims to implement some higher order types known from other languages
             like TypeScript or F#. A higher order type creates a type from another type - aka computing
             with types.
-            
+
             The currently implemented higher order types are:
             * Tagged Union (a choice of multiple named values)
             * Intersection (a type that contains the properties that are present in all given types)
             * Pick (a selection of the properties of a given type)
             * Omit (all but a selection of the properties of a given type)
-            
+
             All types try to resemble Duck Types as close as is possible in C#. Duck Types are compared
             by their shape and not by their name as it is with normal C# types (nominal typing).
         </Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageTags>roslyn sourcegenerator type</PackageTags>
+        <TargetFramework>netstandard2.1</TargetFramework>
+        <IsRoslynComponent>true</IsRoslynComponent>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <IsPackable>true</IsPackable>
+        <Nullable>enable</Nullable>
+        <LangVersion>latest</LangVersion>
     </PropertyGroup>
 
     <ItemGroup Label="Package References">
@@ -40,9 +42,10 @@
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.6.0" PrivateAssets="all"/>
     </ItemGroup>
 
-    <ItemGroup>
+    <ItemGroup Label="Embedded Support Code">
         <EmbeddedResource Include="../TypeSharper.Support/Maybe.cs" LogicalName="Support.Maybe.cs"/>
         <EmbeddedResource Include="../TypeSharper.Support/Void.cs" LogicalName="Support.Void.cs"/>
+        <None Include="README.md" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup>
@@ -52,9 +55,9 @@
         <None Include="logo.svg" Pack="true" PackagePath="" />
     </ItemGroup>
 
-
     <ItemGroup>
-      <Folder Include="nuget-package\" />
+      <Folder Include="nuget-package\lib\netstandard2.1\" />
+      <Folder Include="nuget-package\_rels\" />
     </ItemGroup>
 
     <PropertyGroup>
