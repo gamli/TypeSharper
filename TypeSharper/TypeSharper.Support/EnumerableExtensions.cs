@@ -132,4 +132,15 @@ public static class EnumerableExtensions
             prevSet = true;
         }
     }
+    
+    public static IEnumerable<(T first, T? second)> Pairs<T>(this IEnumerable<T> enumerable)
+    {
+        using var enumerator = enumerable.GetEnumerator();
+        while (enumerator.MoveNext())
+        {
+            var first = enumerator.Current;
+            var second = enumerator.MoveNext() ? enumerator.Current : default;
+            yield return (first, second);
+        }
+    }
 }

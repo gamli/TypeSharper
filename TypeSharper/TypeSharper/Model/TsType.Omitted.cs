@@ -2,8 +2,9 @@ namespace TypeSharper.Model;
 
 public abstract partial record TsType
 {
-    public record OmittedAttr(TsTypeRef FromType, TsUniqueList<TsName> PropertyIdsToOmit)
-        : TsPropertySelectionAttr(FromType, PropertyIdsToOmit);
+    public record OmittedAttr(TsTypeRef FromType, TsUniqueList<TsName> PropertyIdsToOmit,
+            TsList<TsPropMapping> PropMappings)
+        : TsPropertySelectionAttr(FromType, PropertyIdsToOmit, PropMappings);
 
     public sealed record Omitted(TypeInfo Info, TsTypeRef FromType, TsUniqueList<TsProp> Props)
         : PropertySelection(Info, FromType, Props)

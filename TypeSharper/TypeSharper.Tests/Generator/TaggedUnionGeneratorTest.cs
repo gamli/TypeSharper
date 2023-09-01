@@ -95,6 +95,19 @@ public class TaggedUnionGeneratorTests
             }
             """,
             // language=csharp
+            """
+            public Maybe<Void> IfEmptyCase(System.Action handleEmptyCase)
+            {
+                if (this is EmptyCase)
+                {
+                    handleEmptyCase();
+                    return Void.Instance;
+                }
+
+                return Maybe<Void>.NONE;
+            }
+            """,
+            // language=csharp
             "public sealed record EmptyCase : UnionWithEmptyCase;",
             // language=csharp
             "public sealed record StringCase(System.String Value) : UnionWithEmptyCase;");

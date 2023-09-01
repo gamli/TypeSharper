@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace TypeSharper.Model;
 
@@ -17,7 +19,7 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
 
     public Maybe<T> IfProduct<T>(Func<Product, T> handleProduct)
         => this is Product product ? handleProduct(product) : Maybe<T>.NONE;
-    
+
     public Maybe<T> IfIntersection<T>(Func<Intersection, T> handleIntersection)
         => this is Intersection intersection ? handleIntersection(intersection) : Maybe<T>.NONE;
 
@@ -97,4 +99,14 @@ public abstract partial record TsType(TsType.TypeInfo Info) : IComparable<TsType
 
     public TsTypeRef Ref() => Info.Ref();
     public int CompareTo(TsType other) => Info.CompareTo(other.Info);
+
+    public static TsUniqueList<TsProp> FromTypeProperties(
+        TsTypeRef fromType,
+        TsModel model)
+        => model
+           .Resolve(fromType)
+           .MapPropertyDuck(
+               propertyDuck => propertyDuck.Props,
+               _ => TsUniqueList.Create<TsProp>(),
+               native => native.Props);
 }

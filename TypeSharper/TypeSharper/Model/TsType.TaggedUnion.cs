@@ -175,9 +175,9 @@ public abstract partial record TsType
                         $$"""
                         public Maybe<Void> If{{Name}}({{CsMatchMethodParam(handlerHasReturnValue)}})
                         {
-                            if(this is {{Name}} c)
+                            if(this is {{Name}})
                             {
-                                handle{{Name}}(c.Value);
+                                handle{{Name}}();
                                 return Void.Instance;
                             }
                             return Maybe<Void>.NONE;

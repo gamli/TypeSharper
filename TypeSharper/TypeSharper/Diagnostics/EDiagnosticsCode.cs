@@ -8,7 +8,8 @@ public enum EDiagnosticsCode
     IntersectionOfTaggedUnionsIsNotSupported,
     ProductOfTaggedUnionsIsNotSupported,
     TargetTypeSymbolHasError,
-    PropertyDoesNotExist,
+    SelectedPropertyDoesNotExist,
+    MappedPropertyDoesNotExist,
     TargetTypeIsNotARecord,
     MultipleTsAttributesAreNotAllowed,
 }

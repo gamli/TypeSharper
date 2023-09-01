@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using TypeSharper.Model;
@@ -45,20 +46,33 @@ public static class AttributeDataExtensions
         return TypeSharperAttributes.MatchAttributes<TsAttr>(
             attributeTypeRef.Name.Cs(),
             ()
-                => new TsType.IntersectionAttr(typeArgs),
+                => new TsType.IntersectionAttr(typeArgs, PropMappings(namedArgs)),
             ()
                 => new TsType.OmittedAttr(
                     typeArgs.Single(),
-                    TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg)))),
+                    TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg))),
+                    PropMappings(namedArgs)),
             ()
                 => new TsType.PickedAttr(
                     typeArgs.Single(),
-                    TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg)))),
+                    TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg))),
+                    PropMappings(namedArgs)),
             ()
-                => new TsType.ProductAttr(typeArgs),
+                => new TsType.ProductAttr(typeArgs, PropMappings(namedArgs)),
             ()
                 => new TsType.TaggedUnionAttr(
                     TsUniqueList.CreateRange(ctorArgs.Select(arg => new TsName(arg))),
                     TsList.CreateRange(typeArgs)));
     }
+
+    private static TsList<TsType.TsPropMapping> PropMappings(IReadOnlyDictionary<TsName, string[]> namedArgs)
+        => namedArgs.ContainsKey(TypeSharperAttributes.MAPPINGS_ATTRIBUTE_PROP_NAME)
+            ? TsList.Create(
+                namedArgs[TypeSharperAttributes.MAPPINGS_ATTRIBUTE_PROP_NAME]
+                    .Pairs()
+                    .Select(
+                        t => new TsType.TsPropMapping(
+                            new TsName(t.first),
+                            TsTypeRef.Parse(t.second ?? "object"))))
+            : TsList<TsType.TsPropMapping>.Empty;
 }

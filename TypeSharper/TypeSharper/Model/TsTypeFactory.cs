@@ -13,7 +13,7 @@ public static class TsTypeFactory
             TsType.IntersectionAttr intersectionAttr => Create(info, intersectionAttr, model),
             TsType.OmittedAttr omittedAttr           => Create(info, omittedAttr, model),
             TsType.PickedAttr pickedAttr             => Create(info, pickedAttr, model),
-            TsType.TaggedUnionAttr taggedUnionAttr   => Create(info, taggedUnionAttr, model),
+            TsType.TaggedUnionAttr taggedUnionAttr   => Create(info, taggedUnionAttr),
             _                                        => throw new ArgumentOutOfRangeException(nameof(attr)),
         };
 
@@ -23,8 +23,12 @@ public static class TsTypeFactory
         TsModel model)
     {
         var props =
-            TsUniqueList.CreateRange(
-                TsType.Product.FromTypesProps(productAttr.TypesToMultiply.Select(model.Resolve)).Select(t => t.prop));
+            productAttr.MapProps(
+                TsUniqueList.CreateRange(
+                    TsType
+                        .Product
+                        .FromTypesProps(productAttr.TypesToMultiply.Select(model.Resolve))
+                        .Select(t => t.prop)));
 
         return new TsType.Product(
             info,
@@ -44,8 +48,9 @@ public static class TsTypeFactory
         => new TsType.Picked(
             info,
             pickedAttr.FromType,
-            TsUniqueList.CreateRange(
-                FromTypeProperties(pickedAttr.FromType, model)
+            pickedAttr.MapProps(
+                TsType
+                    .FromTypeProperties(pickedAttr.FromType, model)
                     .Where(prop => pickedAttr.PropertyIdsToPick.Contains(prop.Name))));
 
     private static TsType Create(
@@ -55,8 +60,9 @@ public static class TsTypeFactory
         => new TsType.Omitted(
             info,
             omitAttr.FromType,
-            TsUniqueList.CreateRange(
-                FromTypeProperties(omitAttr.FromType, model)
+            omitAttr.MapProps(
+                TsType
+                    .FromTypeProperties(omitAttr.FromType, model)
                     .Where(prop => !omitAttr.PropertyIdsToOmit.Contains(prop.Name))));
 
     private static TsType Create(
@@ -64,29 +70,18 @@ public static class TsTypeFactory
         TsType.IntersectionAttr intersectionAttr,
         TsModel model)
     {
-        var propss =
-            intersectionAttr
-                .TypesToIntersect
-                .Select(model.Resolve)
-                .Select(
-                    type => type.MapPropertyDuck(
-                        propertyDuck => propertyDuck.Props,
-                        _ => TsUniqueList.Create<TsProp>(),
-                        native => native.Props))
-                .ToList();
+        var propertiesPresentInAllTypes =
+            intersectionAttr.MapProps(
+                TsType.Intersection.PropsPresentInAllTypes(intersectionAttr.TypesToIntersect, model));
         return new TsType.Intersection(
             info,
             intersectionAttr.TypesToIntersect,
-            TsUniqueList.CreateRange(
-                propss
-                    .First()
-                    .Where(candidateProp => propss.All(props => props.Any(prop => prop.Name == candidateProp.Name)))));
+            TsUniqueList.CreateRange(propertiesPresentInAllTypes));
     }
 
     private static TsType Create(
         TsType.TypeInfo info,
-        TsType.TaggedUnionAttr taggedUnionAttr,
-        TsModel model)
+        TsType.TaggedUnionAttr taggedUnionAttr)
         => new TsType.TaggedUnion(
             info,
             TsUniqueList.Create(
@@ -98,15 +93,6 @@ public static class TsTypeFactory
                             .Select(Maybe<TsTypeRef>.Some)
                             .Concat(Maybe<TsTypeRef>.NONE.Repeat()),
                         (name, valueType) => new TsType.TaggedUnion.Case(name, valueType))));
-
-
-    public static TsUniqueList<TsProp> FromTypeProperties(TsTypeRef fromType, TsModel model)
-        => model
-           .Resolve(fromType)
-           .MapPropertyDuck(
-               propertyDuck => propertyDuck.Props,
-               _ => TsUniqueList.Create<TsProp>(),
-               native => native.Props);
 
     #endregion
 }

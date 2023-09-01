@@ -121,7 +121,7 @@ public class PickGeneratorTests
     public void Picking_a_non_existing_property_is_an_error()
         => GeneratorTest.Fail(
             // language=csharp
-            EDiagnosticsCode.PropertyDoesNotExist,
+            EDiagnosticsCode.SelectedPropertyDoesNotExist,
             """
             public class PickSource { }
             [TypeSharper.Attributes.TsPickAttribute<PickSource>("Name")]

@@ -122,7 +122,7 @@ public class OmitGeneratorTests
     [Fact]
     public void Omitting_non_existing_properties_is_an_error()
         => GeneratorTest.Fail(
-            EDiagnosticsCode.PropertyDoesNotExist,
+            EDiagnosticsCode.SelectedPropertyDoesNotExist,
             // language=csharp
             """
             public class OmitSource

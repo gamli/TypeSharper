@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using TypeSharper.Diagnostics;
@@ -54,13 +55,32 @@ public abstract partial record TsType
         }
 
         #endregion
+
+        public static TsUniqueList<TsProp> PropsPresentInAllTypes(TsUniqueList<TsTypeRef> types, TsModel model)
+        {
+            var props =
+                types
+                    .Select(type => FromTypeProperties(type, model))
+                    .ToList();
+            return props
+                   .First()
+                   .Where(
+                       candidateProp =>
+                           props.All(ps => ps.Any(p => p.Name == candidateProp.Name)));
+        }
     }
 
-    public record IntersectionAttr(TsUniqueList<TsTypeRef> TypesToIntersect) : TsAttr
+    public record IntersectionAttr(
+            TsUniqueList<TsTypeRef> TypesToIntersect,
+            TsList<TsPropMapping> PropMappings)
+        : TsPropertyDuckAttr(PropMappings)
     {
         #region Protected
 
-        protected override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
+        protected override IEnumerable<TsName> PropNames(TsModel model)
+            => Intersection.PropsPresentInAllTypes(TypesToIntersect, model).Select(prop => prop.Name);
+
+        protected override Maybe<DiagnosticsError> DoDoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
         {
             var unsupportedTypes =
                 TsUniqueList.Create(

@@ -12,7 +12,7 @@
         <RootNamespace>TypeSharper</RootNamespace>
         <PackageId>TypeSharper</PackageId>
         
-        <Version>0.1.3</Version>
+        <Version>0.1.4</Version>
         <Authors>Markus Dibo</Authors>
         <Description>
             This source generator aims to implement some higher order types known from other languages
@@ -48,7 +48,8 @@
     <ItemGroup>
         <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" />
         <None Include="$(OutputPath)\$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" />
-        <None Remove="nuget-package\TypeSharper.0.1.2.symbols.nupkg" />
+        <None Include="README.md" Pack="true" PackagePath="" />
+        <None Include="logo.svg" Pack="true" PackagePath="" />
     </ItemGroup>
 
 

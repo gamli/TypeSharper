@@ -1,5 +1,7 @@
 # TypeSharper
 
+<img src="https://raw.githubusercontent.com/gamli/TypeSharper/master/TypeSharper/TypeSharper/logo.svg" alt="T# Logo" width="200"/>
+
 ## Overview
 
 ### Code Generation Mechanism:

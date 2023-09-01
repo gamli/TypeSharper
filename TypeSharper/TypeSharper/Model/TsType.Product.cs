@@ -56,14 +56,26 @@ public abstract partial record TsType
                .Where(typeProps => typeProps is not null)
                .SelectMany(
                    typeProps
-                       => typeProps.Props.Select(prop => (type: typeProps.type, prop)));
+                       => typeProps.Props.Select(prop => (typeProps.type, prop)));
 
         #endregion
     }
 
-    public record ProductAttr(TsUniqueList<TsTypeRef> TypesToMultiply) : TsAttr
+    public record ProductAttr(TsUniqueList<TsTypeRef> TypesToMultiply, TsList<TsPropMapping> PropMappings)
+        : TsPropertyDuckAttr(PropMappings)
     {
-        protected override Maybe<DiagnosticsError> DoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
+        protected override IEnumerable<TsName> PropNames(TsModel model)
+            => TypesToMultiply
+               .SelectMany(
+                   type => model
+                           .Resolve(type)
+                           .MapPropertyDuck(
+                               propertyDuck => propertyDuck.Props,
+                               _ => TsUniqueList.Create<TsProp>(),
+                               native => native.Props))
+               .Select(prop => prop.Name);
+
+        protected override Maybe<DiagnosticsError> DoDoRunDiagnostics(ITypeSymbol targetTypeSymbol, TsModel model)
         {
             var unsupportedTypes =
                 TypesToMultiply
