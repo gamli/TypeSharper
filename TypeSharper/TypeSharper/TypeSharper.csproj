@@ -46,6 +46,8 @@
         <EmbeddedResource Include="../TypeSharper.Support/Maybe.cs" LogicalName="Support.Maybe.cs"/>
         <EmbeddedResource Include="../TypeSharper.Support/Void.cs" LogicalName="Support.Void.cs"/>
         <None Include="README.md" Pack="true" PackagePath="" />
+        <None Remove="nuget-package\TypeSharper.0.1.5.symbols.nupkg" />
+        <None Remove="nuget-package\TypeSharper.0.1.5.nupkg" />
     </ItemGroup>
 
     <ItemGroup>
@@ -55,10 +57,6 @@
         <None Include="logo.svg" Pack="true" PackagePath="" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="nuget-package\lib\netstandard2.1\" />
-      <Folder Include="nuget-package\_rels\" />
-    </ItemGroup>
 
     <PropertyGroup>
         <GetTargetPathDependsOn>$(GetTargetPathDependsOn);GetDependencyTargetPaths</GetTargetPathDependsOn>
